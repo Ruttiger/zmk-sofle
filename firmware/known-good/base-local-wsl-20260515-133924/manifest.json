@@ -1,0 +1,28 @@
+﻿{
+    "createdAtUtc":  "2026-05-15T11:50:38.7464938Z",
+    "description":  "Base local WSL firmware set kept for emergency restore/flashing.",
+    "source":  "firmware/latest local-wsl build",
+    "files":  [
+                  {
+                      "role":  "base-emergency",
+                      "fileName":  "base_emergency_eyelash_sofle_right.uf2",
+                      "path":  "firmware/known-good/base-local-wsl-20260515-133924/base_emergency_eyelash_sofle_right.uf2",
+                      "sizeBytes":  549888,
+                      "sha256":  "418229ab3d8fbed7bc9149d7aa67cf22133b37c729d9b584ba40768806d3b97f"
+                  },
+                  {
+                      "role":  "base-emergency",
+                      "fileName":  "base_emergency_eyelash_sofle_studio_left.uf2",
+                      "path":  "firmware/known-good/base-local-wsl-20260515-133924/base_emergency_eyelash_sofle_studio_left.uf2",
+                      "sizeBytes":  776704,
+                      "sha256":  "170accc75ab85f76c75db7aecbe0e76186e593e9c378714c1a19433cd3f3ae1c"
+                  },
+                  {
+                      "role":  "base-emergency",
+                      "fileName":  "base_emergency_settings_reset.uf2",
+                      "path":  "firmware/known-good/base-local-wsl-20260515-133924/base_emergency_settings_reset.uf2",
+                      "sizeBytes":  92672,
+                      "sha256":  "fd3072a56b359a56b08ad0c010b77ebe516846fc59ca21aa5c1059518a082d60"
+                  }
+              ]
+}

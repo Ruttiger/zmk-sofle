@@ -1,0 +1,30 @@
+﻿{
+    "createdAtUtc":  "2026-05-15T11:39:24.6846195Z",
+    "buildMode":  "local-wsl",
+    "runner":  "wsl",
+    "branch":  "build_pipeline",
+    "commit":  "4569ff3a1d1ef716146fd3b6419821de8203de5f",
+    "files":  [
+                  {
+                      "artifactName":  "local-wsl",
+                      "fileName":  "eyelash_sofle_right.uf2",
+                      "path":  "firmware/latest/eyelash_sofle_right.uf2",
+                      "sizeBytes":  549888,
+                      "sha256":  "418229ab3d8fbed7bc9149d7aa67cf22133b37c729d9b584ba40768806d3b97f"
+                  },
+                  {
+                      "artifactName":  "local-wsl",
+                      "fileName":  "eyelash_sofle_studio_left.uf2",
+                      "path":  "firmware/latest/eyelash_sofle_studio_left.uf2",
+                      "sizeBytes":  776704,
+                      "sha256":  "170accc75ab85f76c75db7aecbe0e76186e593e9c378714c1a19433cd3f3ae1c"
+                  },
+                  {
+                      "artifactName":  "local-wsl",
+                      "fileName":  "settings_reset.uf2",
+                      "path":  "firmware/latest/settings_reset.uf2",
+                      "sizeBytes":  92672,
+                      "sha256":  "fd3072a56b359a56b08ad0c010b77ebe516846fc59ca21aa5c1059518a082d60"
+                  }
+              ]
+}
