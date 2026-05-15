@@ -134,34 +134,35 @@ run_build() {
 }
 
 run_build \
-  "eyelash_sofle_right" \
-  "$zmk_root/build/eyelash_sofle_right" \
-  -b eyelash_sofle_right -- \
-  -DSHIELD=nice_view \
-  -DZMK_CONFIG="$config_dir" \
-  -DZMK_EXTRA_MODULES="$repo"
-copy_uf2 "$zmk_root/build/eyelash_sofle_right" "eyelash_sofle_right.uf2"
-
-run_build \
-  "eyelash_sofle_studio_left" \
-  "$zmk_root/build/eyelash_sofle_studio_left" \
-  -b eyelash_sofle_left -- \
-  -DSHIELD=nice_view \
+  "ruttiger_eyelash_sofle_standalone_left" \
+  "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" \
+  -b nice_nano_v2 -- \
+  -DSHIELD="eyelash_sofle_central_left nice_view" \
   -DSNIPPET=studio-rpc-usb-uart \
   -DCONFIG_ZMK_STUDIO=y \
   -DCONFIG_ZMK_STUDIO_LOCKING=n \
+  -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y \
   -DZMK_CONFIG="$config_dir" \
   -DZMK_EXTRA_MODULES="$repo"
-copy_uf2 "$zmk_root/build/eyelash_sofle_studio_left" "eyelash_sofle_studio_left.uf2"
+copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" "ruttiger_eyelash_sofle_standalone_left.uf2"
 
 run_build \
-  "settings_reset" \
-  "$zmk_root/build/settings_reset" \
+  "ruttiger_eyelash_sofle_standalone_right" \
+  "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" \
+  -b nice_nano_v2 -- \
+  -DSHIELD="eyelash_sofle_peripheral_right nice_view" \
+  -DZMK_CONFIG="$config_dir" \
+  -DZMK_EXTRA_MODULES="$repo"
+copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" "ruttiger_eyelash_sofle_standalone_right.uf2"
+
+run_build \
+  "ruttiger_eyelash_sofle_settings_reset" \
+  "$zmk_root/build/ruttiger_eyelash_sofle_settings_reset" \
   -b nice_nano_v2 -- \
   -DSHIELD=settings_reset \
   -DZMK_CONFIG="$config_dir" \
   -DZMK_EXTRA_MODULES="$repo"
-copy_uf2 "$zmk_root/build/settings_reset" "settings_reset.uf2"
+copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_settings_reset" "ruttiger_eyelash_sofle_settings_reset.uf2"
 
 echo ""
 echo "Local WSL firmware build finished."
