@@ -1,0 +1,38 @@
+if SHIELD_EYELASH_SOFLE_ANIMATION
+
+# Duration of one full animation loop in milliseconds.
+# Override in your board .conf if needed.
+config EYELASH_ANIM_MS
+	int "Animation loop duration in milliseconds"
+	default 3000
+
+if LVGL
+
+config LV_Z_VDB_SIZE
+	default 64
+
+config LV_DPI_DEF
+	default 148
+
+config LV_Z_BITS_PER_PIXEL
+	default 1
+
+choice LV_COLOR_DEPTH
+	default LV_COLOR_DEPTH_1
+endchoice
+
+# lv_animimg is an LVGL "extra" widget required for frame animations
+config LV_USE_ANIMIMG
+	default y
+
+endif # LVGL
+
+if ZMK_DISPLAY
+
+choice ZMK_DISPLAY_WORK_QUEUE
+	default ZMK_DISPLAY_WORK_QUEUE_DEDICATED
+endchoice
+
+endif # ZMK_DISPLAY
+
+endif # SHIELD_EYELASH_SOFLE_ANIMATION

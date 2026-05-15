@@ -1,10 +1,12 @@
-[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = "High")]
+[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("left", "right", "reset")]
     [string] $Side,
 
-    [string] $FirmwareDir = "firmware/latest"
+    [string] $FirmwareDir = "firmware/latest",
+
+    [switch] $Confirm
 )
 
 $ErrorActionPreference = "Stop"
@@ -118,15 +120,21 @@ Write-ZmkSection "Flash firmware"
 Write-Host "Side: $Side"
 Write-Host "Firmware: $($firmware.FullName)"
 
-if ($WhatIfPreference) {
-    Write-Host "WhatIf: firmware selection succeeded. No UF2 drive will be scanned and no file will be copied."
-    exit 0
-}
-
 $target = Select-Uf2Volume
 $destination = Join-Path -Path $target.Root -ChildPath $firmware.Name
 
-if ($PSCmdlet.ShouldProcess($target.Root, "Copy $($firmware.Name)")) {
+$doFlash = $true
+if ($Confirm) {
+    Write-Host ""
+    Write-Host "Operacion: Copiar $($firmware.Name) -> $($target.Root)"
+    $answer = Read-Host "[Y] Si  [A] Si a todo  [N] No  [L] No a todo  (Enter = Y)"
+    if ($answer -match "^[NnLl]") {
+        $doFlash = $false
+        Write-Host "Flasheo cancelado."
+    }
+}
+
+if ($doFlash) {
     Copy-Item -LiteralPath $firmware.FullName -Destination $destination -Force
     Start-Sleep -Milliseconds 500
     if (Test-Path -LiteralPath $destination) {

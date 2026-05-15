@@ -1,0 +1,33 @@
+/*
+ * Display preview shield for native_posix_64.
+ *
+ * Provides an SDL window (160x68, matching nice!view physical dimensions)
+ * so the ZMK status screen can be rendered on a desktop without hardware.
+ *
+ * The base native_posix_64.overlay (from zmk/app/boards/) already provides:
+ *   - kscan node (zmk,kscan-mock, rows=2, columns=2, exit-after)
+ *   - uart0 node
+ *   - chosen zmk,kscan = &kscan
+ * We override the chosen display, add the SDL dc node, and remove
+ * exit-after so the window stays open indefinitely.
+ */
+
+/ {
+    chosen {
+        zephyr,display = &sdl_dc;
+        /* zmk,kscan stays as &kscan from the base overlay */
+    };
+
+    /* SDL display: 160x68 matches nice!view Sharp Memory LCD */
+    sdl_dc: sdl_dc {
+        compatible = "zephyr,sdl-dc";
+        width  = <160>;
+        height = <68>;
+    };
+};
+
+/* Remove exit-after so the window stays open; events=<0> is a required sentinel */
+&kscan {
+    /delete-property/ exit-after;
+    events = <0>;
+};

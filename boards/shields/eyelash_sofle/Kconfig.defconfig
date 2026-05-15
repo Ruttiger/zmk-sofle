@@ -17,37 +17,7 @@ if SHIELD_EYELASH_SOFLE_CENTRAL_DONGLE || SHIELD_EYELASH_SOFLE_PERIPHERAL_LEFT |
 config ZMK_SPLIT
     default y
 
-
-if ZMK_DISPLAY
-
-config I2C
-    default y
-
-config SSD1306
-    default y
-
-choice ZMK_DISPLAY_WORK_QUEUE
-    default ZMK_DISPLAY_WORK_QUEUE_DEDICATED
-endchoice
-
-endif
-
-if LVGL
-
-config LV_Z_VDB_SIZE
-    default 64
-
-config LV_DPI_DEF
-    default 148
-
-config LV_Z_BITS_PER_PIXEL
-    default 1
-
-choice LV_COLOR_DEPTH
-    default LV_COLOR_DEPTH_1
-endchoice
-
-endif
+# Display work queue and LVGL settings are provided by the nice_view shield.
 
 if ZMK_BACKLIGHT
 

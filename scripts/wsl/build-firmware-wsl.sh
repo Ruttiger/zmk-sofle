@@ -137,22 +137,22 @@ run_build \
   "ruttiger_eyelash_sofle_standalone_left" \
   "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" \
   -b nice_nano_v2 -- \
-  -DSHIELD="eyelash_sofle_central_left nice_view" \
+  -DSHIELD="eyelash_sofle_central_left nice_oled" \
   -DSNIPPET=studio-rpc-usb-uart \
   -DCONFIG_ZMK_STUDIO=y \
   -DCONFIG_ZMK_STUDIO_LOCKING=n \
   -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y \
   -DZMK_CONFIG="$config_dir" \
-  -DZMK_EXTRA_MODULES="$repo"
+  -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
 copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" "ruttiger_eyelash_sofle_standalone_left.uf2"
 
 run_build \
   "ruttiger_eyelash_sofle_standalone_right" \
   "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" \
   -b nice_nano_v2 -- \
-  -DSHIELD="eyelash_sofle_peripheral_right nice_view" \
+  -DSHIELD="eyelash_sofle_peripheral_right nice_oled" \
   -DZMK_CONFIG="$config_dir" \
-  -DZMK_EXTRA_MODULES="$repo"
+  -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
 copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" "ruttiger_eyelash_sofle_standalone_right.uf2"
 
 run_build \
