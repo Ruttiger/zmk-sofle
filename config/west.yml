@@ -6,14 +6,20 @@ manifest:
       # See:
       # - https://zmk.dev/docs/features/modules
       # - https://docs.zephyrproject.org/3.5.0/develop/west/manifest.html#projects
-    - name: mctechnology17
-      url-base: https://github.com/mctechnology17
+    - name: Ruttiger
+      url-base: https://github.com/Ruttiger
+    # - name: mctechnology17
+    #   url-base: https://github.com/mctechnology17
   #  - name: gpeye
   #    url-base: https://github.com/GPeye
   projects:
     - name: zmk-nice-oled
-      remote: mctechnology17
-      revision: main
+      remote: Ruttiger
+      revision: panel_editions_ssd1306_fix
+    # Original upstream (restore to revert fix):
+    # - name: zmk-nice-oled
+    #   remote: mctechnology17
+    #   revision: main
    # - name: mario-peripheral-animation
    #   remote: gpeye
    #    revision: main 
