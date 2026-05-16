@@ -1,0 +1,47 @@
+{
+  "_comment": "Asset manifest for the OLED panel emulator. Edit this file to declare real graphics assets from the repo.",
+  "screen": {
+    "width": 128,
+    "height": 64,
+    "_comment": "Physical OLED resolution. Firmware renders to a 64x128 portrait canvas then rotates 90°/270° before sending to hardware."
+  },
+  "assets": [
+    {
+      "name": "placeholder_animation",
+      "source": "../../boards/shields/eyelash_sofle_animation/assets/placeholder.c",
+      "symbol": "placeholder_00_map",
+      "width": 160,
+      "height": 68,
+      "frames": 2,
+      "format": "lvgl-indexed-1bit",
+      "notes": "Built-in placeholder (solid black + solid white). Replace with real animation via scripts/gif-convert.py. Each frame = 8-byte palette + 1360-byte pixel data (160x68, 1bpp horizontal MSB)."
+    }
+  ],
+  "_external_assets_example": {
+    "_doc": "The cat, dog/Luna, crystal, spaceman and pokemon frames live in the external module 'zmk-nice-oled' (github.com/Ruttiger/zmk-nice-oled, branch panel_editions_ssd1306_fix). They are NOT present in this repo. To use them:",
+    "_step1": "Clone the module: git clone -b panel_editions_ssd1306_fix https://github.com/Ruttiger/zmk-nice-oled ../zmk-nice-oled",
+    "_step2": "Add entries like:",
+    "_example": [
+      {
+        "name": "cat_animation",
+        "source": "../../../zmk-nice-oled/boards/shields/nice_oled/widgets/images/cat_0.c",
+        "symbol": "cat_0_map",
+        "width": 32,
+        "height": 32,
+        "frames": 8,
+        "format": "lvgl-indexed-1bit",
+        "notes": "Right-half peripheral cat animation, 8 frames. Actual dimensions TBD from source file."
+      },
+      {
+        "name": "luna_idle",
+        "source": "../../../zmk-nice-oled/boards/shields/nice_oled/widgets/images/dog_sit1_90.c",
+        "symbol": "dog_sit1_90_map",
+        "width": 32,
+        "height": 32,
+        "frames": 1,
+        "format": "lvgl-indexed-1bit",
+        "notes": "Left-half central dog idle frame 1, pre-rotated 90° for portrait canvas."
+      }
+    ]
+  }
+}
