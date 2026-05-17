@@ -136,58 +136,108 @@
     <section id="tab-state" class="tab-pane">
       <div class="live-preview-layout">
 
-        <!-- LEFT: OLED canvas + placement controls -->
+        <!-- LEFT: OLED canvases (left + right halves) + placement controls -->
         <aside class="preview-sidebar">
-          <p class="oled-label">Left half (128×64)</p>
-          <div class="oled-wrap">
-            <canvas id="panelCanvas"></canvas>
+
+          <div class="preview-halves">
+
+            <!-- Left half -->
+            <div class="oled-half">
+              <div class="oled-half-header">
+                <span class="oled-label">Left (128×64)</span>
+                <div class="orient-btns" id="orientBtnsLeft">
+                  <button class="orient-btn active" data-orient="landscape" title="Landscape">⬚</button>
+                  <button class="orient-btn" data-orient="cw"        title="Portrait 90° CW">↷</button>
+                  <button class="orient-btn" data-orient="ccw"       title="Portrait 90° CCW">↶</button>
+                </div>
+              </div>
+              <div class="oled-stage" id="stageLeft">
+                <div class="oled-wrap">
+                  <canvas id="panelCanvasLeft"></canvas>
+                </div>
+              </div>
+              <fieldset class="half-controls">
+                <legend>Left — asset</legend>
+                <label>
+                  <select id="panelAssetSelectLeft">
+                    <option value="">— none —</option>
+                  </select>
+                </label>
+                <div class="xy-row">
+                  <label>X <input type="number" id="panelXLeft"  value="0" min="-255" max="255" style="width:4em" /></label>
+                  <label>Y <input type="number" id="panelYLeft"  value="0" min="-255" max="255" style="width:4em" /></label>
+                </div>
+                <label>Anchor
+                  <select id="panelAnchorLeft">
+                    <option value="top-left">top-left</option>
+                    <option value="top-right">top-right</option>
+                    <option value="center">center</option>
+                    <option value="bottom-left">bottom-left</option>
+                    <option value="bottom-right">bottom-right</option>
+                  </select>
+                </label>
+                <label class="row-label"><input type="checkbox" id="panelClearLeft"   checked /> Clear before</label>
+                <label class="row-label"><input type="checkbox" id="panelClipLeft"            /> Clipping</label>
+                <label class="row-label"><input type="checkbox" id="panelInvertLeft"          /> Invert</label>
+              </fieldset>
+            </div>
+
+            <!-- Right half -->
+            <div class="oled-half">
+              <div class="oled-half-header">
+                <span class="oled-label">Right (128×64)</span>
+                <div class="orient-btns" id="orientBtnsRight">
+                  <button class="orient-btn active" data-orient="landscape" title="Landscape">⬚</button>
+                  <button class="orient-btn" data-orient="cw"        title="Portrait 90° CW">↷</button>
+                  <button class="orient-btn" data-orient="ccw"       title="Portrait 90° CCW">↶</button>
+                </div>
+              </div>
+              <div class="oled-stage" id="stageRight">
+                <div class="oled-wrap">
+                  <canvas id="panelCanvasRight"></canvas>
+                </div>
+              </div>
+              <fieldset class="half-controls">
+                <legend>Right — asset</legend>
+                <label>
+                  <select id="panelAssetSelectRight">
+                    <option value="">— none —</option>
+                  </select>
+                </label>
+                <div class="xy-row">
+                  <label>X <input type="number" id="panelXRight" value="0" min="-255" max="255" style="width:4em" /></label>
+                  <label>Y <input type="number" id="panelYRight" value="0" min="-255" max="255" style="width:4em" /></label>
+                </div>
+                <label>Anchor
+                  <select id="panelAnchorRight">
+                    <option value="top-left">top-left</option>
+                    <option value="top-right">top-right</option>
+                    <option value="center">center</option>
+                    <option value="bottom-left">bottom-left</option>
+                    <option value="bottom-right">bottom-right</option>
+                  </select>
+                </label>
+                <label class="row-label"><input type="checkbox" id="panelClearRight"  checked /> Clear before</label>
+                <label class="row-label"><input type="checkbox" id="panelClipRight"           /> Clipping</label>
+                <label class="row-label"><input type="checkbox" id="panelInvertRight"         /> Invert</label>
+              </fieldset>
+            </div>
+
           </div>
-          <fieldset>
-            <legend>Place asset on OLED</legend>
-            <label>Asset
-              <select id="panelAssetSelect">
-                <option value="">— none —</option>
-              </select>
-            </label>
-            <label>X
-              <input type="number" id="panelX" value="0" min="0" max="255" style="width:5em" />
-            </label>
-            <label>Y
-              <input type="number" id="panelY" value="0" min="0" max="255" style="width:5em" />
-            </label>
-            <label>Anchor
-              <select id="panelAnchor">
-                <option value="top-left">top-left</option>
-                <option value="top-right">top-right</option>
-                <option value="center">center</option>
-                <option value="bottom-left">bottom-left</option>
-                <option value="bottom-right">bottom-right</option>
-              </select>
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="panelClearBefore" checked />
-              Clear screen before frame
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="panelClipping" />
-              Clipping
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="panelInvertAsset" />
-              Invert asset
-            </label>
-          </fieldset>
+
+          <!-- Shared display controls -->
           <fieldset>
             <legend>Display</legend>
             <label>Zoom
-              <input type="range" id="panelZoom" min="1" max="12" value="4" />
-              <span id="panelZoomValue">4×</span>
+              <input type="range" id="panelZoom" min="1" max="8" value="3" />
+              <span id="panelZoomValue">3×</span>
             </label>
             <label class="row-label">
               <input type="checkbox" id="panelGrid" />
               Show grid
             </label>
           </fieldset>
+
         </aside>
 
         <!-- RIGHT: State controls -->

@@ -313,7 +313,7 @@ canvas {
   font-weight: 400;
 }
 
-/* ---- Live Preview tab (merged Panel Preview + Keyboard State) ---- */
+/* ---- Live Preview tab layout ---- */
 .live-preview-layout {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -334,8 +334,74 @@ canvas {
   margin: 0;
 }
 
-.state-area {
-  min-width: 0;
+.state-area { min-width: 0; }
+
+/* ---- Two-canvas preview layout ---- */
+.preview-halves {
+  display: flex;
+  gap: .75rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.oled-half {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.oled-half-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+
+.orient-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.orient-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: .9rem;
+  padding: .1rem .3rem;
+  line-height: 1;
+  transition: background .1s, border-color .1s;
+}
+.orient-btn:hover  { color: var(--text); border-color: #444; }
+.orient-btn.active { background: #001a0a; border-color: var(--accent-dim); color: var(--accent); }
+
+/* Screen orientation — CSS rotation of canvas container */
+.oled-stage {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.oled-stage.portrait-cw  .oled-wrap,
+.oled-stage.portrait-ccw .oled-wrap {
+  position: absolute;
+  transform-origin: center center;
+}
+.oled-stage.portrait-cw  .oled-wrap { transform: rotate(90deg);  }
+.oled-stage.portrait-ccw .oled-wrap { transform: rotate(-90deg); }
+
+.half-controls { min-width: 0; }
+
+.xy-row {
+  display: flex;
+  gap: .4rem;
+}
+.xy-row label {
+  flex-direction: row;
+  align-items: center;
+  gap: .25rem;
+  color: var(--text-dim);
 }
 
 /* ---- Scrollbar ---- */

@@ -542,97 +542,277 @@ const AssetViewer = (() => {
 })();
 
 // ===========================================================================
+// Virtual Assets — client-side synthetic assets rendered by JS
+// ===========================================================================
+
+const VirtualAssets = (() => {
+  function drawBatteryGauge(w, h, state) {
+    const offscreen  = document.createElement('canvas');
+    offscreen.width  = w;
+    offscreen.height = h;
+    const ctx = offscreen.getContext('2d');
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+
+    const batt     = state?.battery ?? { left: 0, right: 0, charging: false };
+    const leftPct  = Math.max(0, Math.min(100, batt.left));
+    const rightPct = Math.max(0, Math.min(100, batt.right));
+    const charging = batt.charging;
+
+    const fontSize = Math.max(7, Math.floor(h * 0.65));
+    ctx.font         = `bold ${fontSize}px monospace`;
+    ctx.textBaseline = 'top';
+    ctx.fillStyle    = '#fff';
+
+    const half = Math.floor(w / 2) - 2;
+    const pad  = 2;
+    const barH = Math.max(2, Math.floor(h * 0.22));
+    const barY = h - barH - 1;
+
+    // Left half
+    const lText = `L:${leftPct}%${charging ? '\u26A1' : ''}`;
+    ctx.fillText(lText, pad, 0);
+    const lBarW = Math.round((half - pad) * leftPct / 100);
+    ctx.fillRect(pad, barY, lBarW, barH);
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth   = 0.5;
+    ctx.strokeRect(pad - 0.5, barY - 0.5, half - pad + 1, barH + 1);
+
+    // Right half
+    const rText = `R:${rightPct}%`;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(rText, half + pad + 2, 0);
+    const rBarW = Math.round((half - pad) * rightPct / 100);
+    ctx.fillRect(half + pad + 2, barY, rBarW, barH);
+    ctx.strokeStyle = '#888';
+    ctx.strokeRect(half + pad + 2 - 0.5, barY - 0.5, half - pad + 1, barH + 1);
+
+    // Convert to 1-bpp pixel array
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const pixels  = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      pixels[i] = imgData.data[i * 4] > 64 ? 255 : 0;
+    }
+    return pixels;
+  }
+
+  const _assets = {
+    battery_gauge: {
+      name:    'battery_gauge',
+      width:   128,
+      height:  24,
+      frames:  1,
+      format:  'virtual',
+      render:  drawBatteryGauge,
+    },
+  };
+
+  return {
+    list:      () => Object.values(_assets),
+    get:       name => _assets[name] ?? null,
+    isVirtual: name => name in _assets,
+  };
+})();
+
+// ===========================================================================
 // Panel Preview
 // ===========================================================================
 
 const PanelPreview = (() => {
-  let _assetList     = [];
-  let _currentAsset  = null;
-  let _oled          = null;
-  let _frameIndex    = 0;
+  const SIDES = ['left', 'right'];
 
-  const $assetSel  = document.getElementById('panelAssetSelect');
-  const $xInput    = document.getElementById('panelX');
-  const $yInput    = document.getElementById('panelY');
-  const $anchor    = document.getElementById('panelAnchor');
-  const $clearBef  = document.getElementById('panelClearBefore');
-  const $clipping  = document.getElementById('panelClipping');
-  const $invertAss = document.getElementById('panelInvertAsset');
-  const $zoom      = document.getElementById('panelZoom');
-  const $zoomVal   = document.getElementById('panelZoomValue');
-  const $grid      = document.getElementById('panelGrid');
-  const $canvas    = document.getElementById('panelCanvas');
+  // Cached DOM refs per half (resolved at module eval time, DOM is ready)
+  const _dom = {
+    left: {
+      canvas:     document.getElementById('panelCanvasLeft'),
+      assetSel:   document.getElementById('panelAssetSelectLeft'),
+      xInput:     document.getElementById('panelXLeft'),
+      yInput:     document.getElementById('panelYLeft'),
+      anchor:     document.getElementById('panelAnchorLeft'),
+      clearBef:   document.getElementById('panelClearLeft'),
+      clipping:   document.getElementById('panelClipLeft'),
+      invert:     document.getElementById('panelInvertLeft'),
+      stage:      document.getElementById('stageLeft'),
+      orientBtns: document.getElementById('orientBtnsLeft'),
+    },
+    right: {
+      canvas:     document.getElementById('panelCanvasRight'),
+      assetSel:   document.getElementById('panelAssetSelectRight'),
+      xInput:     document.getElementById('panelXRight'),
+      yInput:     document.getElementById('panelYRight'),
+      anchor:     document.getElementById('panelAnchorRight'),
+      clearBef:   document.getElementById('panelClearRight'),
+      clipping:   document.getElementById('panelClipRight'),
+      invert:     document.getElementById('panelInvertRight'),
+      stage:      document.getElementById('stageRight'),
+      orientBtns: document.getElementById('orientBtnsRight'),
+    },
+  };
+
+  const $zoom    = document.getElementById('panelZoom');
+  const $zoomVal = document.getElementById('panelZoomValue');
+  const $grid    = document.getElementById('panelGrid');
+
+  // Per-half runtime state
+  const _half = {
+    left:  { oled: null, asset: null, frameIndex: 0, orientation: 'landscape' },
+    right: { oled: null, asset: null, frameIndex: 0, orientation: 'landscape' },
+  };
+
+  let _lastState = null;
 
   function init() {
-    _oled = new OLEDCanvas($canvas, { screenW: 128, screenH: 64, zoom: 4, colorOn: '#00ff88', colorBg: '#000' });
-    _oled.clear();
+    const zoom = parseInt($zoom.value);
+    for (const side of SIDES) {
+      _half[side].oled = new OLEDCanvas(_dom[side].canvas, {
+        screenW: 128, screenH: 64, zoom, colorOn: '#00ff88', colorBg: '#000',
+      });
+      _half[side].oled.clear();
 
-    $assetSel.addEventListener('change', onAssetChange);
-    [$xInput, $yInput, $anchor, $clearBef, $clipping, $invertAss].forEach(el => el.addEventListener('change', render));
-    $zoom.addEventListener('input', () => { $zoomVal.textContent = $zoom.value + '×'; render(); });
-    $grid.addEventListener('change', render);
+      const d = _dom[side];
+      d.assetSel.addEventListener('change', () => onAssetChange(side));
+      [d.xInput, d.yInput, d.anchor, d.clearBef, d.clipping, d.invert]
+        .forEach(el => el.addEventListener('change', () => renderHalf(side, _lastState)));
+
+      for (const btn of d.orientBtns.querySelectorAll('.orient-btn')) {
+        btn.addEventListener('click', () => setOrientation(side, btn.dataset.orient));
+      }
+    }
+
+    $zoom.addEventListener('input', () => {
+      $zoomVal.textContent = $zoom.value + '\xd7';
+      for (const side of SIDES) {
+        _half[side].oled.setOptions({ zoom: parseInt($zoom.value) });
+        // Re-apply orientation so stage dimensions update for new zoom
+        setOrientation(side, _half[side].orientation, /* noRender= */ true);
+      }
+      renderAll(_lastState);
+    });
+    $grid.addEventListener('change', () => renderAll(_lastState));
+  }
+
+  function setOrientation(side, orient, noRender = false) {
+    _half[side].orientation = orient;
+    const stageEl = _dom[side].stage;
+    const wrapEl  = stageEl.querySelector('.oled-wrap');
+    const zoom    = parseInt($zoom.value);
+    const cw      = 128 * zoom;  // canvas width in px
+    const ch      =  64 * zoom;  // canvas height in px
+
+    stageEl.classList.remove('portrait-cw', 'portrait-ccw');
+    if (orient === 'cw' || orient === 'ccw') {
+      stageEl.classList.add(`portrait-${orient}`);
+      // Stage takes the portrait footprint; canvas is centered inside and rotated
+      stageEl.style.width  = ch + 'px';
+      stageEl.style.height = cw + 'px';
+      wrapEl.style.left    = ((ch - cw) / 2) + 'px';
+      wrapEl.style.top     = ((cw - ch) / 2) + 'px';
+    } else {
+      stageEl.style.width  = '';
+      stageEl.style.height = '';
+      wrapEl.style.left    = '';
+      wrapEl.style.top     = '';
+    }
+
+    for (const btn of _dom[side].orientBtns.querySelectorAll('.orient-btn')) {
+      btn.classList.toggle('active', btn.dataset.orient === orient);
+    }
+    if (!noRender) renderHalf(side, _lastState);
   }
 
   function loadAssetList(list) {
-    _assetList = list;
-    const prev = $assetSel.value;
-    $assetSel.innerHTML = '<option value="">— none —</option>';
-    for (const a of list) {
-      const opt = document.createElement('option');
-      opt.value       = a.name;
-      opt.textContent = a.name;
-      $assetSel.appendChild(opt);
+    for (const side of SIDES) {
+      const sel  = _dom[side].assetSel;
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">— none —</option>';
+      for (const a of list) {
+        const opt = document.createElement('option');
+        opt.value       = a.name;
+        opt.textContent = a.name;
+        sel.appendChild(opt);
+      }
+      for (const va of VirtualAssets.list()) {
+        const opt = document.createElement('option');
+        opt.value       = va.name;
+        opt.textContent = '\u26a1 ' + va.name;
+        sel.appendChild(opt);
+      }
+      if (prev && (list.find(a => a.name === prev) || VirtualAssets.isVirtual(prev))) {
+        sel.value = prev;
+      }
     }
-    if (prev && list.find(a => a.name === prev)) $assetSel.value = prev;
   }
 
-  async function onAssetChange() {
-    const name = $assetSel.value;
-    if (!name) { _currentAsset = null; render(); return; }
+  async function onAssetChange(side) {
+    const name = _dom[side].assetSel.value;
+    if (!name) { _half[side].asset = null; renderHalf(side, _lastState); return; }
+    if (VirtualAssets.isVirtual(name)) {
+      _half[side].asset = VirtualAssets.get(name);
+      renderHalf(side, _lastState);
+      return;
+    }
     try {
-      _currentAsset = await API.getAsset(name);
+      _half[side].asset = await API.getAsset(name);
     } catch (e) {
-      _currentAsset = null;
+      _half[side].asset = null;
     }
-    render();
+    renderHalf(side, _lastState);
   }
 
-  function render() {
+  function renderHalf(side, kbState) {
+    const h   = _half[side];
+    const d   = _dom[side];
     const zoom = parseInt($zoom.value);
-    _oled.setOptions({ zoom, grid: $grid.checked, screenW: 128, screenH: 64 });
+    h.oled.setOptions({ zoom, grid: $grid.checked, screenW: 128, screenH: 64 });
 
-    if ($clearBef.checked || !_currentAsset) _oled.clear();
+    if (d.clearBef.checked || !h.asset) { h.oled.clear(); }
+    if (!h.asset) return;
 
-    if (!_currentAsset?.bytesBase64) return;
+    const a = h.asset;
+    let pixels, pw, ph;
 
-    const a        = _currentAsset;
-    const allBytes = BitmapDecoder.b64ToBytes(a.bytesBase64);
-    const frames   = a.frames || 1;
-    const fBytes   = Math.floor(allBytes.length / frames);
-    const fi       = Math.max(0, Math.min(_frameIndex, frames - 1));
-    const chunk    = allBytes.slice(fi * fBytes, fi * fBytes + fBytes);
+    if (a.format === 'virtual') {
+      pixels = a.render(a.width, a.height, kbState);
+      pw = a.width;
+      ph = a.height;
+    } else {
+      if (!a.bytesBase64) return;
+      const allBytes = BitmapDecoder.b64ToBytes(a.bytesBase64);
+      const frames   = a.frames || 1;
+      const fBytes   = Math.floor(allBytes.length / frames);
+      const fi       = Math.max(0, Math.min(h.frameIndex, frames - 1));
+      const chunk    = allBytes.slice(fi * fBytes, fi * fBytes + fBytes);
+      const decoded  = BitmapDecoder.renderBitmap(chunk, a.width, a.height, a.format, {
+        invertColor: d.invert.checked,
+      });
+      pixels = decoded.pixels;
+      pw     = decoded.width;
+      ph     = decoded.height;
+    }
 
-    const decoded  = BitmapDecoder.renderBitmap(chunk, a.width, a.height, a.format, {
-      invertColor: $invertAss.checked,
-    });
+    let ox = parseInt(d.xInput.value) || 0;
+    let oy = parseInt(d.yInput.value) || 0;
+    const anchor = d.anchor.value;
+    if (anchor === 'top-right')    { ox -= pw; }
+    if (anchor === 'center')       { ox -= pw >> 1; oy -= ph >> 1; }
+    if (anchor === 'bottom-left')  { oy -= ph; }
+    if (anchor === 'bottom-right') { ox -= pw; oy -= ph; }
 
-    // Compute x/y based on anchor
-    let ox = parseInt($xInput.value) || 0;
-    let oy = parseInt($yInput.value) || 0;
-    const anchor = $anchor.value;
-    const dw = decoded.width, dh = decoded.height;
-    if (anchor === 'top-right')    { ox = ox - dw;       }
-    if (anchor === 'center')       { ox = ox - (dw >> 1); oy = oy - (dh >> 1); }
-    if (anchor === 'bottom-left')  {                      oy = oy - dh;         }
-    if (anchor === 'bottom-right') { ox = ox - dw;       oy = oy - dh;         }
-
-    _oled.drawPixels(decoded.pixels, decoded.width, decoded.height, ox, oy, $clipping.checked);
+    h.oled.drawPixels(pixels, pw, ph, ox, oy, d.clipping.checked);
   }
 
-  // Allow external frame advances (e.g. linked to asset viewer animation)
-  function setFrame(idx) { _frameIndex = idx; render(); }
+  function renderAll(kbState) {
+    _lastState = kbState;
+    for (const side of SIDES) renderHalf(side, kbState);
+  }
 
-  return { init, loadAssetList, render, setFrame };
+  function setFrame(idx) {
+    for (const side of SIDES) _half[side].frameIndex = idx;
+    renderAll(_lastState);
+  }
+
+  return { init, loadAssetList, renderAll, setFrame };
 })();
 
 // ===========================================================================
@@ -786,6 +966,7 @@ const StatePanel = (() => {
       const r = await API.patchState(partial);
       _state = r.state;
       syncUI();
+      PanelPreview.renderAll(_state);
     } catch (e) { console.warn('patchState error:', e.message); }
   }
 
@@ -799,6 +980,7 @@ const StatePanel = (() => {
   function applyState(state) {
     _state = state;
     syncUI();
+    PanelPreview.renderAll(state);
   }
 
   function applyKeyboardFromState(kb) {
