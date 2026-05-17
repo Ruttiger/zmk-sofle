@@ -7,14 +7,24 @@
   },
   "assets": [
     {
-      "name": "placeholder_animation",
+      "name": "placeholder_black",
       "source": "../../boards/shields/eyelash_sofle_animation/assets/placeholder.c",
       "symbol": "placeholder_00_map",
       "width": 160,
       "height": 68,
-      "frames": 2,
+      "frames": 1,
       "format": "lvgl-indexed-1bit",
-      "notes": "Built-in placeholder (solid black + solid white). Replace with real animation via scripts/gif-convert.py. Each frame = 8-byte palette + 1360-byte pixel data (160x68, 1bpp horizontal MSB)."
+      "notes": "Placeholder frame 0: solid black (all pixel bits = 0). Good sanity-check target — canvas should appear completely black."
+    },
+    {
+      "name": "placeholder_white",
+      "source": "../../boards/shields/eyelash_sofle_animation/assets/placeholder.c",
+      "symbol": "placeholder_01_map",
+      "width": 160,
+      "height": 68,
+      "frames": 1,
+      "format": "lvgl-indexed-1bit",
+      "notes": "Placeholder frame 1: solid white (all pixel bits = 1). Good sanity-check target — canvas should appear completely white."
     }
   ],
   "_external_assets_example": {

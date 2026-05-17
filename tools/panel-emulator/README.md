@@ -1,300 +1,334 @@
-# OLED Panel Emulator — Sofle ZMK
+﻿# OLED Panel Emulator — Sofle ZMK
 
-Local web tool for previewing and debugging the OLED panel graphics used by the Sofle ZMK firmware, without compiling or flashing firmware.
+Local web tool for previewing OLED panel graphics without compiling or flashing firmware.
+Inspect raw C bitmaps, simulate keyboard state, and test display layouts — all in a browser.
+
+---
 
 ## Quick start
 
 ```bash
 cd tools/panel-emulator
-npm install      # no production dependencies; only built-in Node.js modules used
+npm install
 npm start
 ```
 
-Open **http://localhost:5173** in your browser.
+Open **http://localhost:5173** in any browser.
 
-To use a different port:
-
-```bash
-PORT=3000 npm start
-```
-
-Run tests:
-
-```bash
-npm test
-```
+No build step, no configuration. Stop it with `Ctrl+C`.
 
 ---
 
-## FASE 0 — Asset inventory
+## What you see on first load
 
-### Files found in this repo with graphic data
+The app has three tabs at the top:
 
-| File | Format | Symbols | Status |
-|------|--------|---------|--------|
-| `boards/shields/eyelash_sofle_animation/assets/placeholder.c` | LVGL `LV_IMG_CF_INDEXED_1BIT` 160×68 px | `placeholder_00_map`, `placeholder_01_map` | ✅ Supported (Phase 1) |
-| `boards/shields/eyelash_sofle_animation/assets/placeholder.h` | LVGL declarations | `placeholder_00`, `placeholder_01`, `placeholder_images[]` | Declarations only, no pixel data |
+```
+[ Asset Viewer ]  [ Panel Preview ]  [ Keyboard State ]
+```
 
-### Widget controller files (no pixel data locally)
+**Asset Viewer** is where you spend most of your time. It loads immediately with the first asset in
+`assets.json` selected. Two built-in test assets ship out of the box:
 
-| File | Purpose |
-|------|---------|
-| `zmk-nice-oled-patches/boards/shields/nice_oled/widgets/animation.c` | Peripheral animation controller; declares cat_0–7, crystal_01–16, head, spaceman, pokemon, vim, vip_marcos via `LV_IMG_DECLARE()` |
-| `zmk-nice-oled-patches/boards/shields/nice_oled/widgets/luna.c` | Central Luna (dog) animation controller; declares dog_sit1_90, dog_sit2_90, dog_walk1_90/2, dog_run1_90/2, dog_sneak1_90/2 |
-| `zmk-nice-oled-patches/boards/shields/nice_oled/widgets/screen.c` | Central display rendering |
-| `zmk-nice-oled-patches/boards/shields/nice_oled/widgets/screen_peripheral.c` | Right-half peripheral display rendering |
-| `zmk-nice-oled-patches/boards/shields/nice_oled/widgets/sleep_status.c` | Sleep/idle art logic |
+| Asset name | Description |
+|---|---|
+| `placeholder_black` | 160×68 solid black — canvas should look completely black |
+| `placeholder_white` | 160×68 solid white — canvas should look completely white |
 
-### External module assets (NOT available locally)
-
-The following animation frames live in the external module `zmk-nice-oled`:
-- **Cat** (right half, active): `cat_0` … `cat_7` — 8 frames
-- **Luna/Dog** (left half, WPM-reactive): `dog_sit1_90`, `dog_sit2_90`, `dog_walk1_90`, `dog_walk2_90`, `dog_run1_90`, `dog_run2_90`, `dog_sneak1_90`, `dog_sneak2_90` — 8 frames (pre-rotated 90°)
-- **Crystal** (fallback): `crystal_01` … `crystal_16` — 16 frames
-- **Head**: `head_00` … `head_15` — 16 frames
-- **Spaceman**: `spaceman_00` … `spaceman_19` — 20 frames
-- **Pokemon**: `pokemon_00` … `pokemon_47` — 48 frames
-- **Static**: `vim`, `vip_marcos`
-
-To use external assets, see the section [Adding external zmk-nice-oled assets](#adding-external-zmk-nice-oled-assets) below.
+If the canvas looks black with `placeholder_black` selected, everything is working correctly.
 
 ---
 
-## How to add an asset
+## Asset Viewer — controls explained
 
-### 1. Edit `assets.json`
+```
+Asset:  [ placeholder_black ▼ ]   Format: [ lvgl-indexed-1bit ▼ ]   [⟳ Reload]
 
-```json
-{
-  "assets": [
-    {
-      "name":   "my_icon",
-      "source": "../../path/to/icons.c",
-      "symbol": "icon_battery",
-      "width":  16,
-      "height": 8,
-      "frames": 1,
-      "format": "lvgl-indexed-1bit"
-    }
-  ]
-}
+        ┌─────────────────────────────────────────────────────────────┐
+        │                                                             │
+        │             (pixel canvas)                                  │
+        │                                                             │
+        └─────────────────────────────────────────────────────────────┘
+
+Frame:  [◀]  1 / 1  [▶]   [▶ Play]   FPS: [12 ▼]
+
+Zoom: 1× 2× 4× 8× 16×    □ Grid    □ Invert    □ Mirror H    □ Mirror V
+Rotation: 0° 90° 180° 270°    □ Bounding box
+Pixel color: [■ White ▼]    Background: [■ Black ▼]
 ```
 
-`source` is always **relative to `assets.json`** (i.e. relative to `tools/panel-emulator/`).
+### Asset selector
+Dropdown lists every entry in `assets.json`. Changing the selection re-renders immediately.
 
-### 2. Reload without restart
+### Format selector
+The format declared in `assets.json` is pre-selected. Change it without editing any file — useful
+when you are not sure which bit order a source file uses:
+
+| Format | When to use |
+|---|---|
+| `lvgl-indexed-1bit` | 8-byte palette prefix + 1bpp horizontal MSB. **Used by all firmware assets here.** |
+| `mono-horizontal-msb` | 1bpp rows, MSB leftmost. Same as LVGL without palette strip. |
+| `mono-horizontal-lsb` | 1bpp rows, LSB leftmost. Try if the image looks horizontally mirrored. |
+| `mono-vertical-pages-lsb` | OLED page layout (8px tall pages). Try if the image looks like diagonal stripes. |
+
+### Frame navigation
+Use `◀` / `▶` to step through frames, or click **▶ Play** for continuous playback.
+The FPS dropdown sets speed (1–60 fps).
+
+### Zoom + grid
+Zoom from 1× (actual pixels) to 16× (big enough to see individual bits).
+Enable **Grid** at 4× or higher to see pixel boundaries.
+
+### Invert / Mirror
+- **Invert** flips black↔white, matching `CONFIG_NICE_OLED_WIDGET_INVERTED=y` in firmware.
+- **Mirror H / V** flips the canvas horizontally or vertically.
+
+### Rotation
+Rotates the displayed canvas 0°/90°/180°/270°. The firmware internally renders at 90° (left half)
+or 270° (right half) before sending to the 128×64 hardware. If you are checking a pre-rotation
+asset, set Rotation to 90° to see it upright.
+
+### Asset info panel
+Shows byte counts and any warnings. Green "OK" = parsed bytes match declared dimensions exactly.
+Orange = mismatch. See [Understanding warnings](#understanding-warnings) below.
+
+---
+
+## Panel Preview tab
+
+Place an asset at specific coordinates within a 128×64 canvas — matching the physical OLED:
+
+1. Select an asset in the **Asset** dropdown.
+2. Set **X** and **Y** to position the top-left corner.
+3. Change **Anchor** to align by center, bottom-right, etc.
+4. Enable **Clipping** to crop the asset at screen edges.
+5. Enable **Clear screen** to see each animation frame without ghosting.
+
+Use this tab to check how an icon or animation lines up with real OLED boundaries.
+
+---
+
+## Keyboard State tab
+
+Shows the current simulated keyboard state. All controls update live:
+
+- **Layer buttons** — WINDOWS, WINDOWS_FN, MAC, MAC_FN, GALLIUM, GALLIUM_FN, UTILS.
+- **Battery sliders** — simulate battery level and charging state.
+- **BLE toggles** — simulate connected/disconnected profiles.
+- **Keyboard capture** — forwards real keystrokes from your PC to the simulator.
+- **⟳ Reset** — restores all defaults.
+
+The raw JSON state is shown at the bottom of the panel.
+
+---
+
+## Reloading assets without restarting
+
+When you add or edit an entry in `assets.json`, click **⟳ Reload assets** in the Asset Viewer, or:
 
 ```bash
 curl -X POST http://localhost:5173/api/reload-assets
 ```
 
-Or click **⟳ Reload assets** in the browser UI.
+No server restart required.
 
 ---
 
-## assets.json reference
+## Loading your first real asset
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | yes | Unique identifier shown in the UI |
-| `source` | yes | Path to C source file, relative to `assets.json` |
-| `symbol` | yes | Name of the C array (e.g. `my_icon_map`) |
-| `width` | yes* | Pixel width. Required unless inferable from lv_img_dsc_t |
-| `height` | yes* | Pixel height |
-| `frames` | no | Number of animation frames (default: 1) |
-| `format` | no | Bitmap format (default: `lvgl-indexed-1bit`) |
-| `stride` | no | Bytes per row override |
-| `frameStride` | no | Bytes per frame override |
-| `offset` | no | Byte offset into the array |
-| `notes` | no | Free-text annotation shown in UI |
+### Step 1 — Clone the external module
 
----
-
-## Supported bitmap formats
-
-| Format | Description |
-|--------|-------------|
-| `lvgl-indexed-1bit` | LVGL `LV_IMG_CF_INDEXED_1BIT`: 8-byte palette prefix + 1bpp horizontal MSB. **Default.** |
-| `mono-horizontal-msb` | 1bpp, row-major, MSB of first byte = leftmost pixel |
-| `mono-horizontal-lsb` | 1bpp, row-major, LSB of first byte = leftmost pixel |
-| `mono-vertical-pages-lsb` | OLED page-addressed (8px-tall pages), bit 0 = topmost pixel |
-| `mono-vertical-pages-msb` | OLED page-addressed, bit 7 = topmost pixel |
-| `mono-packed-rows` | Alias for `mono-horizontal-msb` |
-| `mono-packed-columns` | Alias for `mono-vertical-pages-lsb` |
-
-### Formats pending (not yet implemented)
-
-| Format | Notes |
-|--------|-------|
-| `.xbm` files | X11 Bitmap format (C array with bit-reversed rows) |
-| `.pbm` files | Portable Bitmap (binary or ASCII) |
-| `.bmp` files | Windows Bitmap |
-| Multi-symbol LVGL files | Single C file containing multiple `lv_img_dsc_t` structs |
-| LVGL `LV_IMG_CF_TRUE_COLOR` | 16-bit or 32-bit colour |
-| Run-length encoded | Not used by this firmware but common in ZMK community |
-
----
-
-## Display hardware notes
-
-- **Physical OLED**: SSD1306, 128×64, I2C, address `0x3C`
-- **Firmware canvas**: 64×128 portrait mode (rotated before sending to hardware)
-  - Left half: rotated 90° clockwise
-  - Right half: rotated 270° clockwise
-- **This emulator**: shows 128×64 by default (post-rotation view). Use the **Canvas rotation** control in the Asset Viewer to match firmware's pre-rotation internal view.
-
----
-
-## Adding external zmk-nice-oled assets
-
-The cat, dog/Luna, crystal, spaceman and pokemon assets are in the external module. To use them locally:
+The cat, dog, crystal, spaceman, and pokemon assets are not in this repo. They live in the
+external `zmk-nice-oled` module. Clone it next to this workspace:
 
 ```bash
-# From the repo root:
+# Run from the workspace root (zmk-sofle/)
 git clone -b panel_editions_ssd1306_fix \
   https://github.com/Ruttiger/zmk-nice-oled \
   ../zmk-nice-oled
 ```
 
-Then add entries to `assets.json` pointing at the cloned path:
+### Step 2 — Inspect the source file
+
+Open one of the C files to see the symbol name and dimensions:
+
+```bash
+# Example: right-half cat animation
+cat ../zmk-nice-oled/boards/shields/nice_oled/widgets/images/cat_0.c
+```
+
+Look for:
+- The array name: `static const uint8_t cat_0_map[] = {`
+- The `lv_img_dsc_t` struct that declares `.header.w` and `.header.h`
+
+### Step 3 — Add an entry to `assets.json`
+
+Open `tools/panel-emulator/assets.json` and add your entry inside the `"assets"` array:
 
 ```json
 {
-  "name":   "cat_animation",
+  "name":   "cat_frame_0",
   "source": "../../../zmk-nice-oled/boards/shields/nice_oled/widgets/images/cat_0.c",
   "symbol": "cat_0_map",
   "width":  32,
   "height": 32,
-  "frames": 8,
+  "frames": 1,
   "format": "lvgl-indexed-1bit",
-  "notes":  "Right-half peripheral cat animation, 8 frames"
+  "notes":  "Right-half cat animation, frame 0 of 8"
 }
 ```
 
-> **Note**: The exact dimensions and file paths in the external module are TBD until it is cloned.
-> Inspect each `.c` file for the `lv_img_dsc_t` struct which declares `.header.w` and `.header.h`.
+`source` is always **relative to `tools/panel-emulator/`**.
+
+If a single C file contains all frames concatenated into ONE array, set `"frames": 8`.
+If each frame is a separate C file (like the cat animation), add one entry per frame — or
+one entry per file with `"frames": 1`.
+
+### Step 4 — Reload
+
+Click **⟳ Reload assets** in the browser. The new asset appears in the dropdown immediately.
 
 ---
 
-## Using the Asset Viewer
+## All animation assets at a glance
 
-1. Select an asset from the dropdown.
-2. The declared format is pre-selected; change it in the **Bitmap format** dropdown to diagnose bit-order issues.
-3. Use **Frame** controls to step through animation frames or press **▶ Play**.
-4. Adjust **Zoom** (1×–16×) to inspect individual pixels.
-5. Toggle **Show pixel grid** to see pixel boundaries at high zoom.
-6. The **Asset info** panel shows declared vs. expected byte counts and any warnings.
+| Asset set | Location in `zmk-nice-oled` | Frames | Used on |
+|---|---|---|---|
+| Cat | `widgets/images/cat_0.c` … `cat_7.c` | 8 (one per file) | Right half, active |
+| Luna (dog) | `widgets/images/dog_sit1_90.c` … | 8 (one per file) | Left half, WPM-reactive |
+| Crystal | `widgets/images/crystal_01.c` … `crystal_16.c` | 16 | Fallback |
+| Head | `widgets/images/head_00.c` … `head_15.c` | 16 | — |
+| Spaceman | `widgets/images/spaceman_00.c` … | 20 | — |
+| Pokemon | `widgets/images/pokemon_00.c` … | 48 | — |
+| Static | `widgets/images/vim.c`, `vip_marcos.c` | 1 | — |
 
----
-
-## Using the Panel Preview
-
-Place a selected asset at arbitrary x/y coordinates within a 128×64 OLED canvas:
-
-1. Select an asset.
-2. Set **X** and **Y** (top-left of asset by default).
-3. Change **Anchor** to align the asset differently.
-4. Enable **Clipping** to cut the asset at screen boundaries.
-5. Enable **Clear screen before frame** to see each frame in isolation.
+> The Luna assets are pre-rotated 90°. Use **Rotation: 90°** in the Asset Viewer to see them upright.
 
 ---
 
-## Using the Keyboard State panel
+## Understanding warnings
 
-All controls immediately `PATCH /api/state` on the server. The state JSON is shown live at the bottom of the panel.
+Warnings appear in orange in the **Asset info** panel. The image still renders — warnings are not errors.
 
-**Layer** buttons switch between the 7 real keymap layers.
-**Keyboard capture** forwards physical key events from your PC to the simulator.
+### "Expected N pixel bytes, got M"
 
----
+The parsed byte count does not match what `width × height × frames` predicts.
 
-## Diagnostic guide
+- **M < N (got fewer bytes)**: `frames` is set too high, or the file has slightly fewer bytes than
+  expected. The image renders but may be cut off at the bottom.  
+  Fix: lower `frames`, or check the actual byte count in the C file.
 
-### Image appears shifted or offset
-- Check `offset` in assets.json (default 0)
-- Try adjusting X/Y in the Panel Preview tab
-- For LVGL format: verify the 8-byte palette prefix is being stripped (check `format: "lvgl-indexed-1bit"`)
+- **M > N (got more bytes)**: the file has more data than one frame declares. `frames` may be
+  set too low.  
+  Fix: raise `frames`, or check if the file contains concatenated frames.
 
-### Image appears squashed or stretched
-- `width` and `height` in assets.json are incorrect
-- Try incrementing/decrementing by 1 pixel to find the correct stride
+### "Symbol not found"
 
-### Image appears cut off
-- `width` is too large for the actual pixel data
-- Check the `rawByteCount` vs `pixelByteCount` in the info panel
-- Verify `frames` count is correct (more frames = fewer bytes per frame)
+The `symbol` field does not match any array name in the source file. Check spelling — it is
+case-sensitive. Run `listSymbols` in the browser console to see all symbols in the loaded file.
 
-### Image appears inverted (white/black swapped)
-- Toggle **Invert colors** in the Asset Viewer
-- Or use `CONFIG_NICE_OLED_WIDGET_INVERTED=y` equivalent setting
+### "Format auto-detected as …"
 
-### Frames appear concatenated or apelotonados
-- Verify `frames` count in assets.json
-- Check `frameStride`: if frames are not equal-sized, set `frameStride` explicitly
-
-### Wrong bit order (mirrored/garbled pixels)
-- Try switching between `mono-horizontal-msb` and `mono-horizontal-lsb`
-- Try `mono-vertical-pages-lsb` if the image appears as diagonal stripes
-
-### Stride incorrect
-- Set `stride` in assets.json to override the `ceil(width/8)` default
-- Some tools pad rows to 4-byte alignment; try `stride: ceil(width/8 * 4) / 4 * 4`
-
-### frameStride incorrect
-- Set `frameStride` in assets.json. Value = bytes per single frame including any padding
+`format` was omitted and the parser guessed from context. Usually correct. Set `format` explicitly
+to suppress the warning.
 
 ---
 
-## API reference
+## `assets.json` field reference
+
+| Field | Required | Description |
+|---|---|---|
+| `name` | yes | Unique identifier shown in the UI dropdown |
+| `source` | yes | Path to C source file, relative to `tools/panel-emulator/` |
+| `symbol` | yes | Name of the C byte array (e.g. `cat_0_map`) |
+| `width` | yes | Pixel width |
+| `height` | yes | Pixel height |
+| `frames` | no | Number of animation frames concatenated in one array (default: 1) |
+| `format` | no | Bitmap format (default: `lvgl-indexed-1bit`) |
+| `stride` | no | Bytes per row — overrides the `ceil(width/8)` default |
+| `frameStride` | no | Bytes per frame — overrides automatic calculation |
+| `offset` | no | Byte offset into the array before pixel data starts |
+| `notes` | no | Free-text annotation shown in the UI |
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Canvas is all black | `placeholder_black` selected — correct | Switch to `placeholder_white` to confirm rendering works |
+| Canvas is all white | `placeholder_white` selected — correct | — |
+| Image looks like random noise | Wrong format selected | Try switching between `lvgl-indexed-1bit` and `mono-horizontal-msb` |
+| Image appears horizontally mirrored | Wrong bit order | Try `mono-horizontal-lsb` |
+| Image looks like diagonal stripes | Wrong pixel layout | Try `mono-vertical-pages-lsb` |
+| Image appears squashed or stretched | Wrong `width` or `height` | Check the `lv_img_dsc_t` struct in the C file |
+| Image cut off at the bottom | Byte count short | Lower `frames` or verify actual data in C file |
+| "Symbol not found" warning | Wrong `symbol` name | Copy the exact array name from the C declaration |
+| Asset not in dropdown after editing | `assets.json` not reloaded | Click **⟳ Reload assets** |
+| Server won't start — port in use | Port 5173 taken | `PORT=3000 npm start` |
+
+---
+
+## API quick reference
 
 ```
-GET  /api/assets              List assets with metadata and summary
-GET  /api/assets/:name        Asset detail + bytesBase64 for client rendering
-GET  /api/state               Current keyboard state
-PATCH /api/state              Partial state update (deep merge)
-POST /api/key-event           Key event: { type: "tap"|"key_down"|"key_up"|"clear", key?: string }
-POST /api/reload-assets       Reload assets.json and all source files (no restart needed)
-POST /api/reset               Reset state to DEFAULT_STATE
+GET  /api/assets              List all declared assets
+GET  /api/assets/:name        Asset bytes + metadata (bytesBase64 for rendering)
+GET  /api/state               Current keyboard state JSON
+PATCH /api/state              Partial state update
+POST /api/reload-assets       Re-read assets.json and all C source files
+POST /api/reset               Reset keyboard state to defaults
+POST /api/key-event           Simulate key: { "type": "tap", "key": "A" }
 ```
 
-### Example: set layer to UTILS (6) and low battery
+Example — set layer 6 (UTILS) with low battery:
 
 ```bash
 curl -X PATCH http://localhost:5173/api/state \
   -H "Content-Type: application/json" \
-  -d '{"keyboard":{"activeLayer":6},"battery":{"left":15,"right":22}}'
+  -d '{"keyboard":{"activeLayer":6},"battery":{"left":10,"right":8}}'
 ```
 
-### Example: simulate a key tap
+---
+
+## Run tests
 
 ```bash
-curl -X POST http://localhost:5173/api/key-event \
-  -H "Content-Type: application/json" \
-  -d '{"type":"tap","key":"A"}'
+npm test
 ```
+
+Covers the asset parser, bitmap renderer, and state machine. No browser needed.
 
 ---
 
 ## Architecture
 
 ```
-server.mjs          HTTP server + router + static file server
+server.mjs               HTTP server (node:http, port 5173)
 src/
-  asset-loader.mjs  Read assets.json, resolve paths, parse, validate
-  asset-parser.mjs  Parse C source files → extract byte arrays
-  bitmap-renderer.mjs  Byte array → flat pixel array (pure function, all formats)
-  state.mjs         Keyboard state: defaults, getState, patchState, processKeyEvent
+  asset-loader.mjs       Read assets.json, resolve paths, parse, validate byte counts
+  asset-parser.mjs       Extract uint8_t arrays from C source text
+  bitmap-renderer.mjs    Bytes to pixel array (pure function, all formats)
+  state.mjs              Keyboard state: defaults, getState, patchState
 public/
-  index.html        Single-page app shell
-  styles.css        Dark OLED theme
-  app.js            Client: API client, BitmapDecoder, OLEDCanvas, AssetViewer,
-                    PanelPreview, StatePanel — no build step required
+  index.html             Single-page app (3 tabs)
+  styles.css             Dark OLED theme
+  app.js                 Client-side rendering: BitmapDecoder, OLEDCanvas,
+                         AssetViewer, PanelPreview, StatePanel
 test/
-  asset-parser.test.mjs
-  bitmap-renderer.test.mjs
-  state.test.mjs
-  asset-loader.test.mjs
-assets.json         Asset manifest (edit this to add real firmware assets)
+  *.test.mjs             Unit tests (node:test, no browser needed)
+assets.json              Asset manifest — edit this to add firmware assets
 ```
 
-The bitmap interpretation is intentionally **duplicated** in `bitmap-renderer.mjs` (server-side, used in tests and validation) and `app.js` (client-side, used for zero-latency format switching in the UI without a server round-trip).
+```
+[ Asset Viewer ]  [ Panel Preview ]  [ Keyboard State ]
+```
+
+**Asset Viewer** is where you spend most of your time. It loads immediately with the first asset in `assets.json` selected. Two built-in test assets ship out of the box:
+
+| Asset name | Description |
+|---|---|
+| `placeholder_black` | 160x68 solid black — canvas should look completely black |
+| `placeholder_white` | 160x68 solid white — canvas should look completely white |
+
+If the canvas looks black with `placeholder_black` selected, everything is working correctly.
