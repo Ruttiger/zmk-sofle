@@ -20,8 +20,7 @@
 
   <nav class="tab-bar">
     <button class="tab-btn active" data-tab="assets">Asset Viewer</button>
-    <button class="tab-btn" data-tab="panels">Panel Preview</button>
-    <button class="tab-btn" data-tab="state">Keyboard State</button>
+    <button class="tab-btn" data-tab="state">Live Preview</button>
   </nav>
 
   <main>
@@ -132,13 +131,17 @@
     </section>
 
     <!-- ================================================================ -->
-    <!-- TAB: Panel Preview                                                 -->
+    <!-- TAB: Live Preview (merged Panel Preview + Keyboard State)          -->
     <!-- ================================================================ -->
-    <section id="tab-panels" class="tab-pane">
-      <div class="panel-preview-layout">
+    <section id="tab-state" class="tab-pane">
+      <div class="live-preview-layout">
 
-        <!-- Controls -->
-        <aside class="controls-col">
+        <!-- LEFT: OLED canvas + placement controls -->
+        <aside class="preview-sidebar">
+          <p class="oled-label">Left half (128×64)</p>
+          <div class="oled-wrap">
+            <canvas id="panelCanvas"></canvas>
+          </div>
           <fieldset>
             <legend>Place asset on OLED</legend>
             <label>Asset
@@ -174,12 +177,11 @@
               Invert asset
             </label>
           </fieldset>
-
           <fieldset>
-            <legend>Screen</legend>
+            <legend>Display</legend>
             <label>Zoom
-              <input type="range" id="panelZoom" min="1" max="12" value="5" />
-              <span id="panelZoomValue">5×</span>
+              <input type="range" id="panelZoom" min="1" max="12" value="4" />
+              <span id="panelZoomValue">4×</span>
             </label>
             <label class="row-label">
               <input type="checkbox" id="panelGrid" />
@@ -188,146 +190,135 @@
           </fieldset>
         </aside>
 
-        <!-- Canvases -->
-        <div class="panel-canvases">
-          <div>
-            <h3>Left half (128×64)</h3>
-            <div class="oled-wrap">
-              <canvas id="panelCanvas"></canvas>
+        <!-- RIGHT: State controls -->
+        <div class="state-area">
+          <div class="state-layout">
+
+            <div class="state-col">
+              <fieldset>
+                <legend>Battery</legend>
+                <label>Left <span id="battLeftVal">87</span>%
+                  <input type="range" id="battLeft" min="0" max="100" value="87" />
+                </label>
+                <label>Right <span id="battRightVal">84</span>%
+                  <input type="range" id="battRight" min="0" max="100" value="84" />
+                </label>
+                <label class="row-label">
+                  <input type="checkbox" id="chkCharging" />
+                  Charging
+                </label>
+              </fieldset>
+
+              <fieldset>
+                <legend>Connection</legend>
+                <label>Output
+                  <select id="outputSelect">
+                    <option value="BLE">BLE</option>
+                    <option value="USB">USB</option>
+                  </select>
+                </label>
+                <label class="row-label">
+                  <input type="checkbox" id="chkUsb" />
+                  USB connected
+                </label>
+                <label class="row-label">
+                  <input type="checkbox" id="chkBle" checked />
+                  BLE connected
+                </label>
+                <label>BLE profile
+                  <input type="number" id="bleProfile" min="0" max="4" value="0" style="width:3em" />
+                </label>
+                <label class="row-label">
+                  <input type="checkbox" id="chkAdv" />
+                  Advertising
+                </label>
+                <label class="row-label">
+                  <input type="checkbox" id="chkPairing" />
+                  Pairing
+                </label>
+              </fieldset>
+
+              <fieldset>
+                <legend>Split</legend>
+                <label class="row-label">
+                  <input type="checkbox" id="chkSplitL" checked />
+                  Left connected
+                </label>
+                <label class="row-label">
+                  <input type="checkbox" id="chkSplitR" checked />
+                  Right connected
+                </label>
+                <label>Link quality
+                  <select id="linkQuality">
+                    <option value="ok">ok</option>
+                    <option value="degraded">degraded</option>
+                    <option value="disconnected">disconnected</option>
+                  </select>
+                </label>
+              </fieldset>
             </div>
+
+            <div class="state-col">
+              <fieldset>
+                <legend>Layer</legend>
+                <div id="layerButtons" class="layer-buttons"></div>
+              </fieldset>
+
+              <fieldset>
+                <legend>Modifiers</legend>
+                <div class="mod-grid">
+                  <label class="row-label"><input type="checkbox" data-mod="ctrl"  /> Ctrl</label>
+                  <label class="row-label"><input type="checkbox" data-mod="shift" /> Shift</label>
+                  <label class="row-label"><input type="checkbox" data-mod="alt"   /> Alt</label>
+                  <label class="row-label"><input type="checkbox" data-mod="gui"   /> GUI</label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>Locks</legend>
+                <label class="row-label"><input type="checkbox" data-lock="caps"   /> Caps Lock</label>
+                <label class="row-label"><input type="checkbox" data-lock="num"    /> Num Lock</label>
+                <label class="row-label"><input type="checkbox" data-lock="scroll" /> Scroll Lock</label>
+              </fieldset>
+
+              <fieldset>
+                <legend>Power</legend>
+                <label class="row-label"><input type="checkbox" id="chkIdle" />    Idle</label>
+                <label class="row-label"><input type="checkbox" id="chkSleep" />   Sleep</label>
+                <label class="row-label"><input type="checkbox" id="chkSoftOff" /> Soft-off</label>
+              </fieldset>
+
+              <fieldset>
+                <legend>WPM &amp; activity</legend>
+                <label>WPM <span id="wpmVal">0</span>
+                  <input type="range" id="wpmRange" min="0" max="200" value="0" />
+                </label>
+                <label>Activity <span id="actVal">0</span>
+                  <input type="range" id="actRange" min="0" max="100" value="0" />
+                </label>
+              </fieldset>
+            </div>
+
+            <div class="state-col">
+              <fieldset>
+                <legend>Keyboard input</legend>
+                <div class="row-controls" style="margin-bottom:.5rem">
+                  <button id="btnKeyCapture" class="btn-toggle">Capture keyboard</button>
+                  <button id="btnClearKeys">Clear pressed</button>
+                  <button id="btnResetState">Reset all state</button>
+                </div>
+                <label>Send key tap
+                  <div style="display:flex;gap:.4rem">
+                    <input type="text" id="tapKeyInput" placeholder="e.g. A" style="width:5rem" />
+                    <button id="btnTapKey">Tap</button>
+                  </div>
+                </label>
+                <div id="pressedKeys" class="pressed-keys"><em>No keys pressed</em></div>
+                <div class="state-json-box" id="stateJson"></div>
+              </fieldset>
+            </div>
+
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================================ -->
-    <!-- TAB: Keyboard State                                                -->
-    <!-- ================================================================ -->
-    <section id="tab-state" class="tab-pane">
-      <div class="state-layout">
-
-        <div class="state-col">
-          <fieldset>
-            <legend>Battery</legend>
-            <label>Left <span id="battLeftVal">87</span>%
-              <input type="range" id="battLeft" min="0" max="100" value="87" />
-            </label>
-            <label>Right <span id="battRightVal">84</span>%
-              <input type="range" id="battRight" min="0" max="100" value="84" />
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="chkCharging" />
-              Charging
-            </label>
-          </fieldset>
-
-          <fieldset>
-            <legend>Connection</legend>
-            <label>Output
-              <select id="outputSelect">
-                <option value="BLE">BLE</option>
-                <option value="USB">USB</option>
-              </select>
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="chkUsb" />
-              USB connected
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="chkBle" checked />
-              BLE connected
-            </label>
-            <label>BLE profile
-              <input type="number" id="bleProfile" min="0" max="4" value="0" style="width:3em" />
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="chkAdv" />
-              Advertising
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="chkPairing" />
-              Pairing
-            </label>
-          </fieldset>
-
-          <fieldset>
-            <legend>Split</legend>
-            <label class="row-label">
-              <input type="checkbox" id="chkSplitL" checked />
-              Left connected
-            </label>
-            <label class="row-label">
-              <input type="checkbox" id="chkSplitR" checked />
-              Right connected
-            </label>
-            <label>Link quality
-              <select id="linkQuality">
-                <option value="ok">ok</option>
-                <option value="degraded">degraded</option>
-                <option value="disconnected">disconnected</option>
-              </select>
-            </label>
-          </fieldset>
-        </div>
-
-        <div class="state-col">
-          <fieldset>
-            <legend>Layer</legend>
-            <div id="layerButtons" class="layer-buttons"></div>
-          </fieldset>
-
-          <fieldset>
-            <legend>Modifiers</legend>
-            <div class="mod-grid">
-              <label class="row-label"><input type="checkbox" data-mod="ctrl"  /> Ctrl</label>
-              <label class="row-label"><input type="checkbox" data-mod="shift" /> Shift</label>
-              <label class="row-label"><input type="checkbox" data-mod="alt"   /> Alt</label>
-              <label class="row-label"><input type="checkbox" data-mod="gui"   /> GUI</label>
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>Locks</legend>
-            <label class="row-label"><input type="checkbox" data-lock="caps"   /> Caps Lock</label>
-            <label class="row-label"><input type="checkbox" data-lock="num"    /> Num Lock</label>
-            <label class="row-label"><input type="checkbox" data-lock="scroll" /> Scroll Lock</label>
-          </fieldset>
-
-          <fieldset>
-            <legend>Power</legend>
-            <label class="row-label"><input type="checkbox" id="chkIdle" />    Idle</label>
-            <label class="row-label"><input type="checkbox" id="chkSleep" />   Sleep</label>
-            <label class="row-label"><input type="checkbox" id="chkSoftOff" /> Soft-off</label>
-          </fieldset>
-        </div>
-
-        <div class="state-col">
-          <fieldset>
-            <legend>Keyboard input</legend>
-            <div class="row-controls" style="margin-bottom:.5rem">
-              <button id="btnKeyCapture" class="btn-toggle">Capture keyboard</button>
-              <button id="btnClearKeys">Clear pressed</button>
-              <button id="btnResetState">Reset all state</button>
-            </div>
-            <label>Send key tap
-              <div style="display:flex;gap:.4rem">
-                <input type="text" id="tapKeyInput" placeholder="e.g. A" style="width:5rem" />
-                <button id="btnTapKey">Tap</button>
-              </div>
-            </label>
-            <div id="pressedKeys" class="pressed-keys"><em>No keys pressed</em></div>
-            <div class="state-json-box" id="stateJson"></div>
-          </fieldset>
-
-          <fieldset>
-            <legend>WPM &amp; activity</legend>
-            <label>WPM <span id="wpmVal">0</span>
-              <input type="range" id="wpmRange" min="0" max="200" value="0" />
-            </label>
-            <label>Activity <span id="actVal">0</span>
-              <input type="range" id="actRange" min="0" max="100" value="0" />
-            </label>
-          </fieldset>
         </div>
 
       </div>

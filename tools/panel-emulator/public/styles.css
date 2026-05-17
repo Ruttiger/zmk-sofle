@@ -313,6 +313,31 @@ canvas {
   font-weight: 400;
 }
 
+/* ---- Live Preview tab (merged Panel Preview + Keyboard State) ---- */
+.live-preview-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.preview-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.oled-label {
+  font-size: .8rem;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin: 0;
+}
+
+.state-area {
+  min-width: 0;
+}
+
 /* ---- Scrollbar ---- */
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }

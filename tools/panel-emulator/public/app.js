@@ -564,7 +564,7 @@ const PanelPreview = (() => {
   const $canvas    = document.getElementById('panelCanvas');
 
   function init() {
-    _oled = new OLEDCanvas($canvas, { screenW: 128, screenH: 64, zoom: 5, colorOn: '#00ff88', colorBg: '#000' });
+    _oled = new OLEDCanvas($canvas, { screenW: 128, screenH: 64, zoom: 4, colorOn: '#00ff88', colorBg: '#000' });
     _oled.clear();
 
     $assetSel.addEventListener('change', onAssetChange);
