@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo=""
 zmk_root="$HOME/zmk"
+panel=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -12,6 +13,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --zmk-root)
       zmk_root="$2"
+      shift 2
+      ;;
+    --panel)
+      panel="$2"
       shift 2
       ;;
     *)
@@ -133,36 +138,65 @@ run_build() {
   west build --pristine=always -d "$build_dir" "$@"
 }
 
-run_build \
-  "ruttiger_eyelash_sofle_standalone_left" \
-  "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" \
-  -b nice_nano_v2 -- \
-  -DSHIELD="eyelash_sofle_central_left nice_oled" \
-  -DSNIPPET=studio-rpc-usb-uart \
-  -DCONFIG_ZMK_STUDIO=y \
-  -DCONFIG_ZMK_STUDIO_LOCKING=n \
-  -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y \
-  -DZMK_CONFIG="$config_dir" \
-  -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
-copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" "ruttiger_eyelash_sofle_standalone_left.uf2"
+if [[ -n "$panel" ]]; then
+  # ── Panel-only build (nice!view + eyelash_sofle_animation shield) ──────
+  case "$panel" in
+    placeholder)
+      cmake_panel="-DCONFIG_EYELASH_PANEL_PLACEHOLDER=y"
+      ;;
+    layer_battery)
+      cmake_panel="-DCONFIG_EYELASH_PANEL_LAYER_BATTERY=y"
+      ;;
+    *)
+      echo "Unknown panel: '$panel'" >&2
+      echo "Available panels: placeholder, layer_battery" >&2
+      exit 2
+      ;;
+  esac
 
-run_build \
-  "ruttiger_eyelash_sofle_standalone_right" \
-  "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" \
-  -b nice_nano_v2 -- \
-  -DSHIELD="eyelash_sofle_peripheral_right nice_oled" \
-  -DZMK_CONFIG="$config_dir" \
-  -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
-copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" "ruttiger_eyelash_sofle_standalone_right.uf2"
+  artifact="ruttiger_eyelash_sofle_niceview_right_${panel}"
+  run_build \
+    "$artifact" \
+    "$zmk_root/build/$artifact" \
+    -b nice_nano_v2 -- \
+    -DSHIELD="eyelash_sofle_peripheral_right nice_view eyelash_sofle_animation" \
+    "$cmake_panel" \
+    -DZMK_CONFIG="$config_dir" \
+    -DZMK_EXTRA_MODULES="$repo"
+  copy_uf2 "$zmk_root/build/$artifact" "${artifact}.uf2"
+else
+  # ── Standard builds (SSD1306 / nice_oled) ─────────────────────────────
+  run_build \
+    "ruttiger_eyelash_sofle_standalone_left" \
+    "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" \
+    -b nice_nano_v2 -- \
+    -DSHIELD="eyelash_sofle_central_left nice_oled" \
+    -DSNIPPET=studio-rpc-usb-uart \
+    -DCONFIG_ZMK_STUDIO=y \
+    -DCONFIG_ZMK_STUDIO_LOCKING=n \
+    -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y \
+    -DZMK_CONFIG="$config_dir" \
+    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+  copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" "ruttiger_eyelash_sofle_standalone_left.uf2"
 
-run_build \
-  "ruttiger_eyelash_sofle_settings_reset" \
-  "$zmk_root/build/ruttiger_eyelash_sofle_settings_reset" \
-  -b nice_nano_v2 -- \
-  -DSHIELD=settings_reset \
-  -DZMK_CONFIG="$config_dir" \
-  -DZMK_EXTRA_MODULES="$repo"
-copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_settings_reset" "ruttiger_eyelash_sofle_settings_reset.uf2"
+  run_build \
+    "ruttiger_eyelash_sofle_standalone_right" \
+    "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" \
+    -b nice_nano_v2 -- \
+    -DSHIELD="eyelash_sofle_peripheral_right nice_oled" \
+    -DZMK_CONFIG="$config_dir" \
+    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+  copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" "ruttiger_eyelash_sofle_standalone_right.uf2"
+
+  run_build \
+    "ruttiger_eyelash_sofle_settings_reset" \
+    "$zmk_root/build/ruttiger_eyelash_sofle_settings_reset" \
+    -b nice_nano_v2 -- \
+    -DSHIELD=settings_reset \
+    -DZMK_CONFIG="$config_dir" \
+    -DZMK_EXTRA_MODULES="$repo"
+  copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_settings_reset" "ruttiger_eyelash_sofle_settings_reset.uf2"
+fi
 
 echo ""
 echo "Local WSL firmware build finished."

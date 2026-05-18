@@ -5,7 +5,9 @@ param(
     [switch] $Setup,
     [string] $Distro,
     [string] $ZmkRoot = "~/zmk",
-    [string] $ZmkRevision = "v0.3.0"
+    [string] $ZmkRevision = "v0.3.0",
+    [ValidatePattern('^[a-zA-Z_][a-zA-Z0-9_]*$')]
+    [string] $Panel = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -136,7 +138,8 @@ if (-not $NoBackup) {
 }
 
 $script = "$repoWslPath/scripts/wsl/build-firmware-wsl.sh"
-Invoke-Wsl -Command "bash '$script' --repo '$repoWslPath' --zmk-root '$ZmkRoot'"
+$panelArg = if (-not [string]::IsNullOrWhiteSpace($Panel)) { " --panel '$Panel'" } else { "" }
+Invoke-Wsl -Command "bash '$script' --repo '$repoWslPath' --zmk-root '$ZmkRoot'$panelArg"
 New-LocalFirmwareManifest -LatestDir $latestDir -BuildMode "local-wsl"
 
 Write-ZmkSection "Local WSL build complete"
