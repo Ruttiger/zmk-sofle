@@ -433,6 +433,11 @@ const AssetViewer = (() => {
     $chkBbox.addEventListener('change',     render);
     $colorOn.addEventListener('input',      render);
     $colorBg.addEventListener('input',      render);
+
+    document.getElementById('btnExportC').addEventListener('click', () => {
+      exportCanvasToC($canvas, _oled._scrW, _oled._scrH, _oled.zoom,
+        _currentAsset?.symbol ?? _currentAsset?.name ?? 'panel_asset');
+    });
   }
 
   function loadAssetList(list) {
@@ -854,7 +859,7 @@ const PanelPreview = (() => {
       [d.xInput, d.yInput, d.anchor, d.clearBef, d.clipping, d.invert]
         .forEach(el => el.addEventListener('change', () => renderHalf(side, _lastState)));
 
-      for (const btn of d.orientBtns.querySelectorAll('.orient-btn')) {
+      for (const btn of d.orientBtns.querySelectorAll('[data-orient]')) {
         btn.addEventListener('click', () => setOrientation(side, btn.dataset.orient));
       }
     }
@@ -869,6 +874,60 @@ const PanelPreview = (() => {
       renderAll(_lastState);
     });
     $grid.addEventListener('change', () => renderAll(_lastState));
+
+    // Export half canvas as LVGL .c file
+    for (const btn of document.querySelectorAll('.btn-export-half')) {
+      btn.addEventListener('click', () => {
+        const side = btn.dataset.side;
+        const raw  = _dom[side].assetSel.value || side + '_panel';
+        exportCanvasToC(_dom[side].canvas, 128, 64, parseInt($zoom.value), raw);
+      });
+    }
+  }
+
+  function captureScene() {
+    const scene = { zoom: parseInt($zoom.value), grid: $grid.checked, halves: {} };
+    for (const side of SIDES) {
+      const d = _dom[side];
+      scene.halves[side] = {
+        asset:       d.assetSel.value,
+        x:           parseInt(d.xInput.value)  || 0,
+        y:           parseInt(d.yInput.value)  || 0,
+        anchor:      d.anchor.value,
+        clear:       d.clearBef.checked,
+        clip:        d.clipping.checked,
+        invert:      d.invert.checked,
+        orientation: _half[side].orientation,
+      };
+    }
+    return scene;
+  }
+
+  function applyScene(scene) {
+    if (scene.zoom !== undefined) {
+      $zoom.value          = scene.zoom;
+      $zoomVal.textContent = scene.zoom + '\xd7';
+      for (const side of SIDES) {
+        _half[side].oled.setOptions({ zoom: scene.zoom });
+      }
+    }
+    if (scene.grid !== undefined) $grid.checked = scene.grid;
+
+    for (const side of SIDES) {
+      const h = scene.halves?.[side];
+      if (!h) continue;
+      const d = _dom[side];
+      if (h.asset       !== undefined) d.assetSel.value    = h.asset;
+      if (h.x           !== undefined) d.xInput.value      = h.x;
+      if (h.y           !== undefined) d.yInput.value      = h.y;
+      if (h.anchor      !== undefined) d.anchor.value      = h.anchor;
+      if (h.clear       !== undefined) d.clearBef.checked  = h.clear;
+      if (h.clip        !== undefined) d.clipping.checked  = h.clip;
+      if (h.invert      !== undefined) d.invert.checked    = h.invert;
+      // Restore orientation (no render yet — onAssetChange will trigger it)
+      setOrientation(side, h.orientation ?? 'landscape', /* noRender= */ true);
+      onAssetChange(side);  // async — renders when the asset data arrives
+    }
   }
 
   function setOrientation(side, orient, noRender = false) {
@@ -894,7 +953,7 @@ const PanelPreview = (() => {
       wrapEl.style.top     = '';
     }
 
-    for (const btn of _dom[side].orientBtns.querySelectorAll('.orient-btn')) {
+    for (const btn of _dom[side].orientBtns.querySelectorAll('[data-orient]')) {
       btn.classList.toggle('active', btn.dataset.orient === orient);
     }
     if (!noRender) renderHalf(side, _lastState);
@@ -1003,7 +1062,7 @@ const PanelPreview = (() => {
     renderAll(_lastState);
   }
 
-  return { init, loadAssetList, renderAll, setFrame };
+  return { init, loadAssetList, renderAll, setFrame, captureScene, applyScene };
 })();
 
 // ===========================================================================
@@ -1247,6 +1306,68 @@ const StatePanel = (() => {
 })();
 
 // ===========================================================================
+// Panel Manager — save / load Live Preview layouts in localStorage
+// ===========================================================================
+
+const PanelManager = (() => {
+  const KEY = 'eyelash-oled-panels-v1';
+
+  const $select  = () => document.getElementById('pmSelect');
+  const $nameIn  = () => document.getElementById('pmNameInput');
+  const $btnLoad = () => document.getElementById('btnPmLoad');
+  const $btnSave = () => document.getElementById('btnPmSave');
+  const $btnDel  = () => document.getElementById('btnPmDelete');
+
+  function _read()     { try { return JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch { return {}; } }
+  function _write(p)   { localStorage.setItem(KEY, JSON.stringify(p)); }
+  function _names()    { return Object.keys(_read()); }
+
+  function _refreshSelect() {
+    const sel = $select();
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">\u2014 saved panels \u2014</option>';
+    for (const n of _names()) {
+      const opt = Object.assign(document.createElement('option'), { value: n, textContent: n });
+      sel.appendChild(opt);
+    }
+    if (cur && _names().includes(cur)) sel.value = cur;
+  }
+
+  function init() {
+    _refreshSelect();
+
+    $btnSave().addEventListener('click', () => {
+      const name = ($nameIn().value.trim() || $select().value).trim();
+      if (!name) { $nameIn().focus(); return; }
+      const panels = _read();
+      panels[name] = PanelPreview.captureScene();
+      _write(panels);
+      $nameIn().value = '';
+      _refreshSelect();
+      $select().value = name;
+    });
+
+    $btnLoad().addEventListener('click', () => {
+      const name = $select().value;
+      if (!name) return;
+      const scene = _read()[name];
+      if (scene) PanelPreview.applyScene(scene);
+    });
+
+    $btnDel().addEventListener('click', () => {
+      const name = $select().value;
+      if (!name) return;
+      const panels = _read();
+      delete panels[name];
+      _write(panels);
+      _refreshSelect();
+    });
+  }
+
+  return { init };
+})();
+
+// ===========================================================================
 // Tab navigation
 // ===========================================================================
 
@@ -1296,6 +1417,84 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ===========================================================================
+// Export canvas as LVGL .c asset
+// ===========================================================================
+
+/**
+ * Prompt for a symbol name then download a ready-to-use LVGL lvgl-indexed-1bit
+ * .c file from whatever is currently rendered on `canvas`.
+ *
+ * @param {HTMLCanvasElement} canvas  - the OLEDCanvas backing element
+ * @param {number}            scrW   - logical screen width  (px, e.g. 128)
+ * @param {number}            scrH   - logical screen height (px, e.g.  64)
+ * @param {number}            zoom   - current zoom factor
+ * @param {string}            defaultName - suggested symbol name (sanitised)
+ */
+function exportCanvasToC(canvas, scrW, scrH, zoom, defaultName) {
+  // Strip emoji / special chars to produce a valid C identifier
+  const safe = (defaultName || 'my_panel')
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}]/gu, '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_]/g, '_')
+    .replace(/^_+|_+$/g, '') || 'my_panel';
+
+  // eslint-disable-next-line no-alert
+  const sym = prompt('Symbol name for the .c file:', safe);
+  if (!sym) return;
+
+  const ctx     = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const stride  = Math.ceil(scrW / 8);
+  const pixBuf  = new Uint8Array(stride * scrH);
+
+  for (let row = 0; row < scrH; row++) {
+    for (let col = 0; col < scrW; col++) {
+      const imgX = col * zoom + Math.floor(zoom / 2);
+      const imgY = row * zoom + Math.floor(zoom / 2);
+      const idx  = (imgY * canvas.width + imgX) * 4;
+      const on   = imgData.data[idx] > 64 || imgData.data[idx + 1] > 64 || imgData.data[idx + 2] > 64;
+      if (on) pixBuf[row * stride + (col >> 3)] |= (0x80 >> (col & 7));
+    }
+  }
+
+  // LVGL indexed-1bit format: 8-byte palette (black entry, white entry) + row data
+  const all = new Uint8Array(8 + pixBuf.length);
+  all.set([0x00, 0x00, 0x00, 0xff,  0xff, 0xff, 0xff, 0xff], 0);
+  all.set(pixBuf, 8);
+
+  const hexLines = [];
+  for (let i = 0; i < all.length; i += 16) {
+    hexLines.push('    ' + Array.from(all.slice(i, i + 16))
+      .map(b => `0x${b.toString(16).padStart(2, '0')}`).join(', ') + ',');
+  }
+
+  const src = [
+    `/* Generated by OLED Panel Emulator \u2014 ${scrW}\xd7${scrH} \u2014 lvgl-indexed-1bit */`,
+    `/* Drop this file into boards/shields/eyelash_sofle_animation/panels/<name>/ */`,
+    `#include <lvgl.h>`,
+    ``,
+    `static const uint8_t ${sym}_map[] = {`,
+    ...hexLines,
+    `};`,
+    ``,
+    `const lv_img_dsc_t ${sym} = {`,
+    `    .header.always_zero = 0,`,
+    `    .header.w           = ${scrW},`,
+    `    .header.h           = ${scrH},`,
+    `    .header.cf          = LV_IMG_CF_INDEXED_1BIT,`,
+    `    .data_size          = sizeof(${sym}_map),`,
+    `    .data               = ${sym}_map,`,
+    `};`,
+    ``,
+  ].join('\n');
+
+  const url = URL.createObjectURL(new Blob([src], { type: 'text/plain' }));
+  const a   = Object.assign(document.createElement('a'), { href: url, download: `${sym}.c` });
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
 // Module-level cache of the server asset list, needed to refresh selectors
 // after a local .c file is loaded without losing the existing options.
 let _serverAssetList = [];
@@ -1316,6 +1515,8 @@ async function main() {
     AssetViewer.loadAssetList(_serverAssetList);
     AssetViewer.selectAsset(name);
   });
+
+  PanelManager.init();
 
   try {
     const [assetsResp, state] = await Promise.all([

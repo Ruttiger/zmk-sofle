@@ -129,6 +129,9 @@
           <div class="oled-wrap" id="assetOledWrap">
             <canvas id="assetCanvas"></canvas>
           </div>
+          <div class="canvas-actions">
+            <button id="btnExportC" class="btn-sm" title="Export current render as LVGL .c asset file">⬇ Export .c</button>
+          </div>
           <div class="warnings-box" id="assetWarnings"></div>
         </div>
       </div>
@@ -147,6 +150,19 @@
             <button class="btn-sm btn-local-load" id="btnLoadLocalLP" title="Parse a .c asset file and add it to both selectors">📂 Load .c</button>
           </div>
 
+          <fieldset class="panel-manager-fs">
+            <legend>Saved panels</legend>
+            <div class="pm-row">
+              <select id="pmSelect"><option value="">— saved panels —</option></select>
+              <button id="btnPmLoad"   class="btn-sm" title="Load selected panel">Load</button>
+              <button id="btnPmDelete" class="btn-sm btn-danger" title="Delete selected panel">×</button>
+            </div>
+            <div class="pm-row">
+              <input type="text" id="pmNameInput" placeholder="Panel name…" />
+              <button id="btnPmSave" class="btn-sm" title="Save current Live Preview layout as a named panel">Save</button>
+            </div>
+          </fieldset>
+
           <div class="preview-halves">
 
             <!-- Left half -->
@@ -157,6 +173,7 @@
                   <button class="orient-btn active" data-orient="landscape" title="Landscape">⬚</button>
                   <button class="orient-btn" data-orient="cw"        title="Portrait 90° CW">↷</button>
                   <button class="orient-btn" data-orient="ccw"       title="Portrait 90° CCW">↶</button>
+                  <button class="orient-btn btn-export-half" data-side="left"  title="Export left canvas as LVGL .c file">⬇</button>
                 </div>
               </div>
               <div class="oled-stage" id="stageLeft">
@@ -198,6 +215,7 @@
                   <button class="orient-btn active" data-orient="landscape" title="Landscape">⬚</button>
                   <button class="orient-btn" data-orient="cw"        title="Portrait 90° CW">↷</button>
                   <button class="orient-btn" data-orient="ccw"       title="Portrait 90° CCW">↶</button>
+                  <button class="orient-btn btn-export-half" data-side="right" title="Export right canvas as LVGL .c file">⬇</button>
                 </div>
               </div>
               <div class="oled-stage" id="stageRight">

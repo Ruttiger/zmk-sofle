@@ -471,6 +471,60 @@ canvas {
   border-color: var(--accent);
 }
 
+/* ---- Export canvas button ---- */
+.canvas-actions {
+  margin-top: .35rem;
+  display: flex;
+  gap: .4rem;
+}
+
+/* ---- Danger button (delete) ---- */
+.btn-danger {
+  color: #cc6666;
+  border-color: #3a1a1a;
+}
+.btn-danger:hover {
+  color: #ff8888;
+  border-color: #773333;
+  background: #1e0808;
+}
+
+/* ---- Export-half button in orient-btns strip ---- */
+.btn-export-half {
+  /* re-uses .orient-btn layout but no active state */
+  opacity: .75;
+}
+.btn-export-half:hover { opacity: 1; }
+
+/* ---- Panel Manager fieldset ---- */
+.panel-manager-fs {
+  margin-top: .5rem;
+}
+.panel-manager-fs .pm-row {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .3rem;
+}
+.panel-manager-fs .pm-row:first-of-type {
+  margin-top: 0;
+}
+.panel-manager-fs select,
+.panel-manager-fs input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-size: .8rem;
+  padding: .2rem .4rem;
+}
+.panel-manager-fs input[type="text"]::placeholder {
+  color: var(--text-dim);
+  opacity: .6;
+}
+
 /* ---- Scrollbar ---- */
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }

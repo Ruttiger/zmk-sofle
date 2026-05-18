@@ -3,9 +3,14 @@
 if(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM)
   zephyr_library_sources(custom_status_screen.c)
 
-  # --- Animation asset ---
-  # Replace placeholder.c with your generated animation after running gif-convert.py:
-  #   python3 scripts/gif-convert.py input.gif --no-register -W 160 -H 68
-  # Then swap the line below and update the #include in custom_status_screen.c.
-  zephyr_library_sources(assets/placeholder.c)
+  # --- Panel source selection ---
+  # Each panel lives in panels/<name>/ and provides eyelash_panel_screen().
+  # Switch panels by setting CONFIG_EYELASH_PANEL_xxx in config/eyelash_sofle.conf.
+  if(CONFIG_EYELASH_PANEL_PLACEHOLDER)
+    zephyr_library_sources(panels/placeholder/panel.c)
+    zephyr_library_sources(assets/placeholder.c)
+  elseif(CONFIG_EYELASH_PANEL_LAYER_BATTERY)
+    zephyr_library_sources(panels/layer_battery/panel.c)
+    # No static assets required for this panel
+  endif()
 endif()

@@ -33,6 +33,30 @@ choice ZMK_DISPLAY_WORK_QUEUE
 	default ZMK_DISPLAY_WORK_QUEUE_DEDICATED
 endchoice
 
+# ---------------------------------------------------------------------------
+# Panel selection — choose which display layout is compiled into the firmware.
+# Set the desired CONFIG_EYELASH_PANEL_xxx=y in config/eyelash_sofle.conf.
+# ---------------------------------------------------------------------------
+choice EYELASH_PANEL
+	prompt "Display panel layout"
+	default EYELASH_PANEL_PLACEHOLDER
+	depends on ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+
+config EYELASH_PANEL_PLACEHOLDER
+	bool "Animation + battery"
+	select LV_USE_ANIMIMG
+	help
+	  Full-screen frame animation (160×68) with battery percentage overlay.
+	  Replace assets/placeholder.c with gif-convert.py output to customise.
+
+config EYELASH_PANEL_LAYER_BATTERY
+	bool "Layer name + battery"
+	help
+	  Displays the active layer name (centre) and battery status (bottom).
+	  No animation assets required — ideal for testing or minimal builds.
+
+endchoice # EYELASH_PANEL
+
 endif # ZMK_DISPLAY
 
 endif # SHIELD_EYELASH_SOFLE_ANIMATION
