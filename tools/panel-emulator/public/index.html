@@ -41,6 +41,10 @@
               </select>
             </label>
 
+            <div class="local-load-row">
+              <button class="btn-sm btn-local-load" id="btnLoadLocalAV" title="Parse a .c asset file and add it to the list">📂 Load .c</button>
+            </div>
+
             <label>Bitmap format
               <select id="formatSelect">
                 <option value="lvgl-indexed-1bit">lvgl-indexed-1bit (LVGL 1bpp horiz MSB + palette)</option>
@@ -138,6 +142,10 @@
 
         <!-- LEFT: OLED canvases (left + right halves) + placement controls -->
         <aside class="preview-sidebar">
+
+          <div class="local-load-row">
+            <button class="btn-sm btn-local-load" id="btnLoadLocalLP" title="Parse a .c asset file and add it to both selectors">📂 Load .c</button>
+          </div>
 
           <div class="preview-halves">
 
@@ -375,6 +383,21 @@
     </section>
 
   </main>
+
+  <!-- Shared hidden file input for local .c loading -->
+  <input type="file" id="cFileInput" accept=".c" style="display:none" />
+
+  <!-- Symbol picker dialog (shown when a .c file contains multiple symbols) -->
+  <dialog id="symbolPickerDialog">
+    <form method="dialog">
+      <p class="dialog-title">Multiple symbols found — pick one:</p>
+      <select id="symbolPickerSelect" size="6"></select>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn-sm">Cancel</button>
+        <button id="btnSymbolPickerUse" class="btn-sm btn-accent" value="use">Use symbol</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="app.js" type="module"></script>
 </body>

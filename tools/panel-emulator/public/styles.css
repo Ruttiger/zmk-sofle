@@ -404,6 +404,73 @@ canvas {
   color: var(--text-dim);
 }
 
+/* ---- Local .c file loader ---- */
+.local-load-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .2rem;
+}
+
+.btn-local-load {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: .8rem;
+  padding: .25rem .55rem;
+  transition: background .12s, color .12s;
+}
+.btn-local-load:hover {
+  background: #1a1a1a;
+  color: var(--text);
+  border-color: #444;
+}
+
+/* Symbol picker dialog */
+#symbolPickerDialog {
+  background:  var(--surface);
+  border:      1px solid var(--border);
+  border-radius: 6px;
+  color:       var(--text);
+  padding:     1rem 1.25rem 1rem;
+  min-width:   280px;
+  box-shadow:  0 8px 32px rgba(0,0,0,.7);
+}
+#symbolPickerDialog::backdrop {
+  background: rgba(0,0,0,.55);
+}
+.dialog-title {
+  color: var(--text-dim);
+  font-size: .85rem;
+  margin: 0 0 .5rem;
+}
+#symbolPickerSelect {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-size: .82rem;
+  padding: .25rem;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  margin-top: .75rem;
+}
+.btn-accent {
+  background: #002211;
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+.btn-accent:hover {
+  background: #003318;
+  border-color: var(--accent);
+}
+
 /* ---- Scrollbar ---- */
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }

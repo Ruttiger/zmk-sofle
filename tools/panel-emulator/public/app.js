@@ -7,12 +7,16 @@
  *   api          — fetch wrappers for server endpoints
  *   BitmapDecoder — client-side bitmap interpreter (mirrors bitmap-renderer.mjs)
  *   OLEDCanvas   — HTML5 Canvas renderer for a simulated monochrome OLED screen
+ *   LocalAssets  — in-memory store for assets parsed from local .c files
+ *   LocalFileLoader — file input wiring and symbol-picker dialog
  *   AssetViewer  — Asset Viewer tab logic
  *   PanelPreview — Panel Preview tab logic
  *   StatePanel   — Keyboard State tab logic
  */
 
 'use strict';
+
+import { listSymbols, parseSymbol } from './asset-parser.mjs';
 
 // ===========================================================================
 // API client
@@ -56,6 +60,74 @@ const API = (() => {
     reloadAssets:  ()       => post('/api/reload-assets'),
     resetState:    ()       => post('/api/reset'),
   };
+})();
+
+// ===========================================================================
+// Local Assets — assets parsed from .c files in the browser (no server needed)
+// ===========================================================================
+
+const LocalAssets = (() => {
+  const _store = new Map(); // '📁 symbolName' → asset object
+
+  /** Convert a Uint8Array to a base-64 string (browser-compatible). */
+  function _toB64(bytes) {
+    let s = '';
+    for (const b of bytes) s += String.fromCharCode(b);
+    return btoa(s);
+  }
+
+  /**
+   * Parse text from a .c file and store the resulting asset.
+   * Returns { ok, name, warnings, errors }.
+   */
+  function add(text, symbolName, format = 'auto') {
+    const parsed = parseSymbol(text, symbolName, format);
+    if (parsed.errors.length && parsed.bytes.length === 0) {
+      return { ok: false, errors: parsed.errors };
+    }
+
+    const w = parsed.inferredWidth  ?? 128;
+    const h = parsed.inferredHeight ?? 64;
+
+    // Determine the format to store (affects Live Preview rendering)
+    let storedFormat;
+    if (format !== 'auto') {
+      storedFormat = format;
+    } else {
+      storedFormat = parsed.palette !== null ? 'lvgl-indexed-1bit' : 'mono-horizontal-msb';
+    }
+
+    const name = `📁 ${symbolName}`;
+    _store.set(name, {
+      name,
+      symbol:         symbolName,
+      source:         null,   // local file, no server path
+      width:          w,
+      height:         h,
+      frames:         1,
+      format:         storedFormat,
+      bytesBase64:    _toB64(parsed.bytes),
+      pixelByteCount: parsed.bytes.length,
+      rawByteCount:   parsed.rawByteCount,
+      inferredWidth:  parsed.inferredWidth,
+      inferredHeight: parsed.inferredHeight,
+      warnings:       parsed.warnings,
+      errors:         parsed.errors,
+      loaded:         true,
+    });
+    return { ok: true, name };
+  }
+
+  function list() {
+    return [..._store.values()].map(({ name, width, height, frames, format, loaded }) =>
+      ({ name, width, height, frames, format, loaded })
+    );
+  }
+
+  function get(name)       { return _store.get(name) ?? null; }
+  function isLocal(name)   { return _store.has(name); }
+
+  return { add, list, get, isLocal };
 })();
 
 // ===========================================================================
@@ -373,7 +445,16 @@ const AssetViewer = (() => {
       opt.textContent = `${a.name}${a.loaded ? '' : ' ⚠'}`;
       $assetSelect.appendChild(opt);
     }
-    if (prev && list.find(a => a.name === prev)) $assetSelect.value = prev;
+    // Append local assets (parsed from .c files in the browser)
+    for (const la of LocalAssets.list()) {
+      const opt = document.createElement('option');
+      opt.value       = la.name;
+      opt.textContent = la.name;
+      $assetSelect.appendChild(opt);
+    }
+    if (prev && (list.find(a => a.name === prev) || LocalAssets.isLocal(prev))) {
+      $assetSelect.value = prev;
+    }
     // Also update panel tab select
     PanelPreview.loadAssetList(list);
   }
@@ -382,6 +463,16 @@ const AssetViewer = (() => {
     stopPlay();
     const name = $assetSelect.value;
     if (!name) { _currentAsset = null; renderInfo(); render(); return; }
+    // Local .c file asset
+    if (LocalAssets.isLocal(name)) {
+      _currentAsset     = LocalAssets.get(name);
+      _frameIndex       = 0;
+      $frameInput.value = 0;
+      if (_currentAsset.format) $formatSelect.value = _currentAsset.format;
+      renderInfo();
+      render();
+      return;
+    }
     try {
       _currentAsset = await API.getAsset(name);
       _frameIndex   = 0;
@@ -538,7 +629,7 @@ const AssetViewer = (() => {
     }, 1000 / fps);
   }
 
-  return { init, loadAssetList };
+  return { init, loadAssetList, selectAsset: (name) => { $assetSelect.value = name; onAssetChange(); } };
 })();
 
 // ===========================================================================
@@ -613,6 +704,94 @@ const VirtualAssets = (() => {
     get:       name => _assets[name] ?? null,
     isVirtual: name => name in _assets,
   };
+})();
+
+// ===========================================================================
+// Local File Loader — wires the "📂 Load .c" buttons to the shared file input
+// ===========================================================================
+
+const LocalFileLoader = (() => {
+  const $fileInput = document.getElementById('cFileInput');
+  const $dialog    = document.getElementById('symbolPickerDialog');
+  const $select    = document.getElementById('symbolPickerSelect');
+  const $btnUse    = document.getElementById('btnSymbolPickerUse');
+
+  let _pendingText    = null;
+  let _onAdded        = null;
+
+  function init(onAdded) {
+    _onAdded = onAdded;
+
+    // Both buttons trigger the same hidden file input
+    document.querySelectorAll('.btn-local-load').forEach(btn => {
+      btn.addEventListener('click', () => $fileInput.click());
+    });
+
+    $fileInput.addEventListener('change', _onFileSelected);
+
+    // Dialog "Use symbol" button
+    $btnUse.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sym = $select.value;
+      if (sym && _pendingText !== null) {
+        const r = LocalAssets.add(_pendingText, sym);
+        if (r.ok) _onAdded(r.name);
+        else console.warn('LocalAssets.add errors:', r.errors);
+      }
+      $dialog.close();
+    });
+
+    // Reset file input when dialog closes so the same file can be re-selected
+    $dialog.addEventListener('close', () => {
+      $fileInput.value = '';
+      _pendingText     = null;
+    });
+  }
+
+  async function _onFileSelected() {
+    const file = $fileInput.files[0];
+    if (!file) return;
+
+    let text;
+    try {
+      text = await file.text();
+    } catch (e) {
+      console.error('Failed to read file:', e);
+      $fileInput.value = '';
+      return;
+    }
+
+    const symbols = listSymbols(text);
+
+    if (symbols.length === 0) {
+      // eslint-disable-next-line no-alert
+      alert(`No C array symbols found in "${file.name}".\nExpected uint8_t or unsigned char arrays.`);
+      $fileInput.value = '';
+      return;
+    }
+
+    if (symbols.length === 1) {
+      const r = LocalAssets.add(text, symbols[0]);
+      if (r.ok) _onAdded(r.name);
+      else console.warn('Parse errors:', r.errors);
+      $fileInput.value = '';
+      return;
+    }
+
+    // Multiple symbols — let user pick
+    _pendingText      = text;
+    $select.innerHTML = '';
+    for (const sym of symbols) {
+      const opt       = document.createElement('option');
+      opt.value       = sym;
+      opt.textContent = sym;
+      $select.appendChild(opt);
+    }
+    $select.selectedIndex = 0;
+    $dialog.showModal();
+  }
+
+  return { init };
 })();
 
 // ===========================================================================
@@ -738,7 +917,14 @@ const PanelPreview = (() => {
         opt.textContent = '\u26a1 ' + va.name;
         sel.appendChild(opt);
       }
-      if (prev && (list.find(a => a.name === prev) || VirtualAssets.isVirtual(prev))) {
+      // Append local assets (parsed from .c files in the browser)
+      for (const la of LocalAssets.list()) {
+        const opt = document.createElement('option');
+        opt.value       = la.name;
+        opt.textContent = la.name;
+        sel.appendChild(opt);
+      }
+      if (prev && (list.find(a => a.name === prev) || VirtualAssets.isVirtual(prev) || LocalAssets.isLocal(prev))) {
         sel.value = prev;
       }
     }
@@ -749,6 +935,11 @@ const PanelPreview = (() => {
     if (!name) { _half[side].asset = null; renderHalf(side, _lastState); return; }
     if (VirtualAssets.isVirtual(name)) {
       _half[side].asset = VirtualAssets.get(name);
+      renderHalf(side, _lastState);
+      return;
+    }
+    if (LocalAssets.isLocal(name)) {
+      _half[side].asset = LocalAssets.get(name);
       renderHalf(side, _lastState);
       return;
     }
@@ -1086,7 +1277,10 @@ function setStatus(ok) {
 document.getElementById('btnReloadAssets').addEventListener('click', async () => {
   try {
     const r = await API.reloadAssets();
-    if (r.assets) AssetViewer.loadAssetList(r.assets);
+    if (r.assets) {
+      _serverAssetList = r.assets;
+      AssetViewer.loadAssetList(r.assets);
+    }
     setStatus(true);
   } catch (e) {
     setStatus(false);
@@ -1102,6 +1296,10 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Module-level cache of the server asset list, needed to refresh selectors
+// after a local .c file is loaded without losing the existing options.
+let _serverAssetList = [];
+
 // ===========================================================================
 // Bootstrap
 // ===========================================================================
@@ -1112,6 +1310,13 @@ async function main() {
   PanelPreview.init();
   StatePanel.init();
 
+  // Init file loader: when an asset is added, refresh both selectors and
+  // auto-select in Asset Viewer so the user sees the render immediately.
+  LocalFileLoader.init((name) => {
+    AssetViewer.loadAssetList(_serverAssetList);
+    AssetViewer.selectAsset(name);
+  });
+
   try {
     const [assetsResp, state] = await Promise.all([
       API.getAssets(),
@@ -1119,7 +1324,10 @@ async function main() {
     ]);
     setStatus(true);
 
-    if (assetsResp.assets) AssetViewer.loadAssetList(assetsResp.assets);
+    if (assetsResp.assets) {
+      _serverAssetList = assetsResp.assets;
+      AssetViewer.loadAssetList(assetsResp.assets);
+    }
     StatePanel.applyState(state);
 
     // Log any top-level errors
