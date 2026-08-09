@@ -158,11 +158,12 @@ if [[ -n "$panel" ]]; then
   run_build \
     "$artifact" \
     "$zmk_root/build/$artifact" \
-    -b nice_nano_v2 -- \
+    -b eyelash_sofle_right -- \
     -DSHIELD="eyelash_sofle_peripheral_right nice_view eyelash_sofle_animation" \
     "$cmake_panel" \
+    -DCONFIG_NICE_OLED_ON=n \
     -DZMK_CONFIG="$config_dir" \
-    -DZMK_EXTRA_MODULES="$repo"
+    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
   copy_uf2 "$zmk_root/build/$artifact" "${artifact}.uf2"
 else
   # ── Standard builds (SSD1306 / nice_oled) ─────────────────────────────

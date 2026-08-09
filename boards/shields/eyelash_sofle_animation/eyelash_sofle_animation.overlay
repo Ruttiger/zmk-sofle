@@ -1,0 +1,8 @@
+/*
+ * eyelash_sofle_animation shield overlay.
+ *
+ * No device tree changes required here — the nice_view shield already
+ * configures the LS013B7DH03 SPI display as zephyr,display.  This file
+ * exists so that Zephyr's CMake shield discovery (which globs for .overlay
+ * files) can locate and register this shield.
+ */
