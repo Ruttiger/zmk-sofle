@@ -637,7 +637,7 @@ static void draw_canvas(lv_obj_t *widget, lv_color_t cbuf[],
 #if IS_ENABLED(CONFIG_NICE_OLED_SHOW_SLEEP_ART_ON_IDLE) || \
     IS_ENABLED(CONFIG_NICE_OLED_SHOW_SLEEP_ART_ON_SLEEP)
     {
-        zmk_activity_state_t _act = zmk_widget_sleep_status_get_activity();
+        enum zmk_activity_state _act = zmk_widget_sleep_status_get_activity();
         bool _show = false;
 #if IS_ENABLED(CONFIG_NICE_OLED_SHOW_SLEEP_ART_ON_IDLE)
         if (_act == ZMK_ACTIVITY_IDLE)  _show = true;

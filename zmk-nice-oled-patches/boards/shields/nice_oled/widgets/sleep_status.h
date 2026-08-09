@@ -23,4 +23,4 @@ int zmk_widget_sleep_status_init(struct zmk_widget_sleep_status *widget,
 
 /* Return the most recently received activity state.
  * ZMK_ACTIVITY_ACTIVE / ZMK_ACTIVITY_IDLE / ZMK_ACTIVITY_SLEEP.   */
-zmk_activity_state_t zmk_widget_sleep_status_get_activity(void);
+enum zmk_activity_state zmk_widget_sleep_status_get_activity(void);

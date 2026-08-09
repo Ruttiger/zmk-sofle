@@ -38,7 +38,8 @@ fi
 zmk_app="$zmk_root/app"
 config_dir="$repo/config"
 latest_dir="$repo/firmware/latest"
-nice_oled_root="$HOME/zmk-nice-oled-upstream"
+nice_oled_source="$HOME/zmk-nice-oled-upstream"
+nice_oled_root="$zmk_root/build/nice-oled-patched"
 
 if [[ ! -d "$zmk_app" || ! -f "$zmk_app/CMakeLists.txt" ]]; then
   echo "ZMK app directory not found at $zmk_app."
@@ -51,11 +52,29 @@ if [[ ! -d "$config_dir" ]]; then
   exit 1
 fi
 
-if [[ ! -d "$nice_oled_root/boards/shields/nice_oled" ]]; then
-  echo "Upstream zmk-nice-oled module not found at $nice_oled_root." >&2
+if [[ ! -d "$nice_oled_source/boards/shields/nice_oled" ]]; then
+  echo "Upstream zmk-nice-oled module not found at $nice_oled_source." >&2
   echo "Run setup first: scripts/Build-FirmwareLocal.ps1 -Setup" >&2
   exit 1
 fi
+
+patch_root="$repo/zmk-nice-oled-patches/boards/shields/nice_oled/widgets"
+if [[ ! -d "$patch_root" ]]; then
+  echo "Versioned zmk-nice-oled patches not found at $patch_root." >&2
+  exit 1
+fi
+
+# Stage a clean module copy so local builds use the checked-in SSD1306 canvas
+# fixes without modifying the user's upstream checkout or depending on an
+# unpublished fork worktree.
+if [[ "$nice_oled_root" != "$zmk_root/build/nice-oled-patched" ]]; then
+  echo "Refusing to replace unexpected staged module path: $nice_oled_root" >&2
+  exit 1
+fi
+rm -rf "$nice_oled_root"
+mkdir -p "$nice_oled_root"
+cp -a "$nice_oled_source/." "$nice_oled_root/"
+cp "$patch_root"/*.c "$patch_root"/*.h "$nice_oled_root/boards/shields/nice_oled/widgets/"
 
 if [[ -d "$zmk_root/.venv" && ! -f "$zmk_root/.venv/bin/activate" ]]; then
   echo "The Python virtual environment at $zmk_root/.venv is incomplete."
