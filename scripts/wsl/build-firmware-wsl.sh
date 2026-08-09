@@ -182,6 +182,7 @@ else
     -DSNIPPET=studio-rpc-usb-uart \
     -DCONFIG_ZMK_STUDIO=y \
     -DCONFIG_ZMK_STUDIO_LOCKING=n \
+    -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y \
     -DZMK_CONFIG="$config_dir" \
     -DZMK_EXTRA_MODULES="$repo;$nice_oled_root"
   copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" "ruttiger_eyelash_sofle_standalone_left.uf2"
