@@ -132,6 +132,30 @@
         "panel": "dedicated",
         "focus": true
       }
+    },
+    {
+      "label": "ZMK: WSL build panel (placeholder)",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\Build-FirmwareLocal.ps1", "-Panel", "placeholder"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      }
+    },
+    {
+      "label": "ZMK: WSL build panel (layer_battery)",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\Build-FirmwareLocal.ps1", "-Panel", "layer_battery"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      }
     }
   ]
 }
