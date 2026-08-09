@@ -25,9 +25,9 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
 /* Module-level activity state, read by draw_canvas(). */
-static zmk_activity_state_t current_activity = ZMK_ACTIVITY_ACTIVE;
+static enum zmk_activity_state current_activity = ZMK_ACTIVITY_ACTIVE;
 
-zmk_activity_state_t zmk_widget_sleep_status_get_activity(void)
+enum zmk_activity_state zmk_widget_sleep_status_get_activity(void)
 {
     return current_activity;
 }

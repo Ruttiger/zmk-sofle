@@ -38,6 +38,8 @@ fi
 zmk_app="$zmk_root/app"
 config_dir="$repo/config"
 latest_dir="$repo/firmware/latest"
+nice_oled_source="$HOME/zmk-nice-oled-upstream"
+nice_oled_root="$zmk_root/build/nice-oled-patched"
 
 if [[ ! -d "$zmk_app" || ! -f "$zmk_app/CMakeLists.txt" ]]; then
   echo "ZMK app directory not found at $zmk_app."
@@ -49,6 +51,30 @@ if [[ ! -d "$config_dir" ]]; then
   echo "Config directory not found: $config_dir" >&2
   exit 1
 fi
+
+if [[ ! -d "$nice_oled_source/boards/shields/nice_oled" ]]; then
+  echo "Upstream zmk-nice-oled module not found at $nice_oled_source." >&2
+  echo "Run setup first: scripts/Build-FirmwareLocal.ps1 -Setup" >&2
+  exit 1
+fi
+
+patch_root="$repo/zmk-nice-oled-patches/boards/shields/nice_oled/widgets"
+if [[ ! -d "$patch_root" ]]; then
+  echo "Versioned zmk-nice-oled patches not found at $patch_root." >&2
+  exit 1
+fi
+
+# Stage a clean module copy so local builds use the checked-in SSD1306 canvas
+# fixes without modifying the user's upstream checkout or depending on an
+# unpublished fork worktree.
+if [[ "$nice_oled_root" != "$zmk_root/build/nice-oled-patched" ]]; then
+  echo "Refusing to replace unexpected staged module path: $nice_oled_root" >&2
+  exit 1
+fi
+rm -rf "$nice_oled_root"
+mkdir -p "$nice_oled_root"
+cp -a "$nice_oled_source/." "$nice_oled_root/"
+cp "$patch_root"/*.c "$patch_root"/*.h "$nice_oled_root/boards/shields/nice_oled/widgets/"
 
 if [[ -d "$zmk_root/.venv" && ! -f "$zmk_root/.venv/bin/activate" ]]; then
   echo "The Python virtual environment at $zmk_root/.venv is incomplete."
@@ -163,30 +189,30 @@ if [[ -n "$panel" ]]; then
     "$cmake_panel" \
     -DCONFIG_NICE_OLED_ON=n \
     -DZMK_CONFIG="$config_dir" \
-    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+    -DZMK_EXTRA_MODULES="$repo;$nice_oled_root"
   copy_uf2 "$zmk_root/build/$artifact" "${artifact}.uf2"
 else
   # ── Standard builds (SSD1306 / nice_oled) ─────────────────────────────
   run_build \
     "ruttiger_eyelash_sofle_standalone_left" \
     "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" \
-    -b nice_nano_v2 -- \
+    -b eyelash_sofle_left -- \
     -DSHIELD="eyelash_sofle_central_left nice_oled" \
     -DSNIPPET=studio-rpc-usb-uart \
     -DCONFIG_ZMK_STUDIO=y \
     -DCONFIG_ZMK_STUDIO_LOCKING=n \
     -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y \
     -DZMK_CONFIG="$config_dir" \
-    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+    -DZMK_EXTRA_MODULES="$repo;$nice_oled_root"
   copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" "ruttiger_eyelash_sofle_standalone_left.uf2"
 
   run_build \
     "ruttiger_eyelash_sofle_standalone_right" \
     "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" \
-    -b nice_nano_v2 -- \
+    -b eyelash_sofle_right -- \
     -DSHIELD="eyelash_sofle_peripheral_right nice_oled" \
     -DZMK_CONFIG="$config_dir" \
-    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+    -DZMK_EXTRA_MODULES="$repo;$nice_oled_root"
   copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" "ruttiger_eyelash_sofle_standalone_right.uf2"
 
   run_build \

@@ -111,6 +111,19 @@ fi
 python -m pip install --upgrade pyelftools
 python -c "import pkg_resources" >/dev/null
 
+# The local build helper initializes west from ZMK's app manifest, while this
+# repository declares zmk-nice-oled in config/west.yml. Keep a checkout of the
+# declared upstream module available as an explicit extra module for local
+# builds as well.
+nice_oled_root="$HOME/zmk-nice-oled-upstream"
+if [[ ! -d "$nice_oled_root/.git" ]]; then
+  git clone --branch main https://github.com/mctechnology17/zmk-nice-oled.git "$nice_oled_root"
+else
+  git -C "$nice_oled_root" fetch origin main
+  git -C "$nice_oled_root" checkout main
+  git -C "$nice_oled_root" pull --ff-only origin main
+fi
+
 echo ""
 echo "ZMK setup finished."
 echo "If the Zephyr SDK is not installed yet, install it inside WSL before building:"

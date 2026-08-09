@@ -88,7 +88,7 @@ static void draw_canvas(lv_obj_t *widget, lv_color_t cbuf[],
 #if IS_ENABLED(CONFIG_NICE_OLED_SHOW_SLEEP_ART_ON_IDLE) || \
     IS_ENABLED(CONFIG_NICE_OLED_SHOW_SLEEP_ART_ON_SLEEP)
     {
-        zmk_activity_state_t act = zmk_widget_sleep_status_get_activity();
+        enum zmk_activity_state act = zmk_widget_sleep_status_get_activity();
         bool show_sleep = false;
 #if IS_ENABLED(CONFIG_NICE_OLED_SHOW_SLEEP_ART_ON_IDLE)
         if (act == ZMK_ACTIVITY_IDLE)  show_sleep = true;
@@ -109,7 +109,7 @@ static void draw_canvas(lv_obj_t *widget, lv_color_t cbuf[],
 #endif
 
     /* Rotate portrait 64×128 → physical 128×64 */
-    rotate_canvas(canvas, cbuf);
+    rotate_canvas_270(canvas, cbuf);
 }
 
 /* ---- zmk_widget_screen_all_redraw --------------------------------- */
