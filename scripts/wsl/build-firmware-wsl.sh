@@ -38,6 +38,7 @@ fi
 zmk_app="$zmk_root/app"
 config_dir="$repo/config"
 latest_dir="$repo/firmware/latest"
+nice_oled_root="$HOME/zmk-nice-oled-upstream"
 
 if [[ ! -d "$zmk_app" || ! -f "$zmk_app/CMakeLists.txt" ]]; then
   echo "ZMK app directory not found at $zmk_app."
@@ -47,6 +48,12 @@ fi
 
 if [[ ! -d "$config_dir" ]]; then
   echo "Config directory not found: $config_dir" >&2
+  exit 1
+fi
+
+if [[ ! -d "$nice_oled_root/boards/shields/nice_oled" ]]; then
+  echo "Upstream zmk-nice-oled module not found at $nice_oled_root." >&2
+  echo "Run setup first: scripts/Build-FirmwareLocal.ps1 -Setup" >&2
   exit 1
 fi
 
@@ -163,30 +170,29 @@ if [[ -n "$panel" ]]; then
     "$cmake_panel" \
     -DCONFIG_NICE_OLED_ON=n \
     -DZMK_CONFIG="$config_dir" \
-    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+    -DZMK_EXTRA_MODULES="$repo;$nice_oled_root"
   copy_uf2 "$zmk_root/build/$artifact" "${artifact}.uf2"
 else
   # ── Standard builds (SSD1306 / nice_oled) ─────────────────────────────
   run_build \
     "ruttiger_eyelash_sofle_standalone_left" \
     "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" \
-    -b nice_nano_v2 -- \
+    -b eyelash_sofle_left -- \
     -DSHIELD="eyelash_sofle_central_left nice_oled" \
     -DSNIPPET=studio-rpc-usb-uart \
     -DCONFIG_ZMK_STUDIO=y \
     -DCONFIG_ZMK_STUDIO_LOCKING=n \
-    -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y \
     -DZMK_CONFIG="$config_dir" \
-    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+    -DZMK_EXTRA_MODULES="$repo;$nice_oled_root"
   copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_left" "ruttiger_eyelash_sofle_standalone_left.uf2"
 
   run_build \
     "ruttiger_eyelash_sofle_standalone_right" \
     "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" \
-    -b nice_nano_v2 -- \
+    -b eyelash_sofle_right -- \
     -DSHIELD="eyelash_sofle_peripheral_right nice_oled" \
     -DZMK_CONFIG="$config_dir" \
-    -DZMK_EXTRA_MODULES="$repo;$HOME/zmk-nice-oled"
+    -DZMK_EXTRA_MODULES="$repo;$nice_oled_root"
   copy_uf2 "$zmk_root/build/ruttiger_eyelash_sofle_standalone_right" "ruttiger_eyelash_sofle_standalone_right.uf2"
 
   run_build \

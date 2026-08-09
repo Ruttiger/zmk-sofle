@@ -15,16 +15,3 @@ include:
   - board: nice_nano_v2
     shield: settings_reset
     artifact-name: ruttiger_eyelash_sofle_settings_reset
-
-  # ── nice!view panel builds ──────────────────────────────────────────────
-  # Each entry compiles ONE panel via CONFIG_EYELASH_PANEL_xxx.
-  # To add a new panel: create panels/<name>/ + add an entry here.
-  - board: eyelash_sofle_right
-    shield: eyelash_sofle_peripheral_right nice_view eyelash_sofle_animation
-    cmake-args: -DCONFIG_EYELASH_PANEL_PLACEHOLDER=y
-    artifact-name: ruttiger_eyelash_sofle_niceview_right_placeholder
-
-  - board: eyelash_sofle_right
-    shield: eyelash_sofle_peripheral_right nice_view eyelash_sofle_animation
-    cmake-args: -DCONFIG_EYELASH_PANEL_LAYER_BATTERY=y
-    artifact-name: ruttiger_eyelash_sofle_niceview_right_layer_battery
