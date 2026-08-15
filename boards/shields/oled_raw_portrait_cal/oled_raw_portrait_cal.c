@@ -140,24 +140,17 @@ static void oled_portrait_build_calibration(
 	memset(oled_portrait_framebuffer, 0xff,
 	       sizeof(oled_portrait_framebuffer));
 
-	/* Inset portrait border: x=1, y=1, width=62, height=126. */
-	portrait_rect(caps, 1, 1, 62, 126);
+	/* Left edge ladder: x=0..3, with distinct stepped lengths. */
+	portrait_vline(caps, 0, 10, 117);
+	portrait_vline(caps, 1, 14, 113);
+	portrait_vline(caps, 2, 18, 109);
+	portrait_vline(caps, 3, 22, 105);
 
-	/* TOP LEFT: empty 7x7 square. */
-	portrait_rect(caps, 5, 5, 7, 7);
-
-	/* TOP RIGHT: filled 7x7 square. */
-	for (int y = 5; y < 12; ++y) {
-		portrait_hline(caps, 52, 58, y);
-	}
-
-	/* BOTTOM LEFT: large X. */
-	portrait_diag(caps, 5, 110, 17, 122);
-	portrait_diag(caps, 17, 110, 5, 122);
-
-	/* BOTTOM RIGHT: large plus. */
-	portrait_hline(caps, 48, 62, 117);
-	portrait_vline(caps, 55, 110, 124);
+	/* Right edge ladder: x=60..63, mirrored stepped lengths. */
+	portrait_vline(caps, 60, 22, 105);
+	portrait_vline(caps, 61, 18, 109);
+	portrait_vline(caps, 62, 14, 113);
+	portrait_vline(caps, 63, 10, 117);
 
 	/* Short horizontal line exactly at portrait y=64. */
 	portrait_hline(caps, 22, 42, 64);
