@@ -16,40 +16,58 @@
 
 LOG_MODULE_REGISTER(oled_ui_left, CONFIG_DISPLAY_LOG_LEVEL);
 
-static void oled_ui_draw_corner_markers(void)
+static void oled_portrait_set_pixel(int x, int y)
 {
-	/* TL: outline square. */
-	oled_gfx_rect(0, 0, 6, 6, true);
-
-	/* TR: filled square. */
-	oled_gfx_fill_rect(58, 0, 6, 6, true);
-
-	/* BL: X. */
-	for (int i = 0; i < 6; ++i) {
-		oled_gfx_set_pixel(i, 122 + i, true);
-		oled_gfx_set_pixel(5 - i, 122 + i, true);
-	}
-
-	/* BR: plus. */
-	oled_gfx_hline(58, 63, 124, true);
-	oled_gfx_vline(60, 122, 127, true);
+	oled_gfx_set_pixel(x, y, true);
 }
 
-static void oled_ui_draw_static_screen(void)
+static void oled_ui_draw_geometry(void)
 {
-	oled_gfx_clear();
-	oled_ui_draw_corner_markers();
+	/* Complete logical portrait border: width 64, height 128. */
+	for (int x = 0; x < OLED_GFX_WIDTH; ++x) {
+		oled_portrait_set_pixel(x, 0);
+		oled_portrait_set_pixel(x, OLED_GFX_HEIGHT - 1);
+	}
+	for (int y = 0; y < OLED_GFX_HEIGHT; ++y) {
+		oled_portrait_set_pixel(0, y);
+		oled_portrait_set_pixel(OLED_GFX_WIDTH - 1, y);
+	}
 
-	/* Corner labels make the orientation result unambiguous. */
-	oled_gfx_draw_text(8, 0, "TL", true);
-	oled_gfx_draw_text(44, 0, "TR", true);
-	oled_gfx_draw_text(8, 120, "BL", true);
-	oled_gfx_draw_text(44, 120, "BR", true);
+	/* Asymmetric crosshair in logical portrait coordinates. */
+	for (int y = 0; y < OLED_GFX_HEIGHT; ++y) {
+		oled_portrait_set_pixel(32, y);
+	}
+	for (int x = 0; x < OLED_GFX_WIDTH; ++x) {
+		oled_portrait_set_pixel(x, 64);
+	}
 
-	oled_gfx_draw_text(0, 24, "SOFLE", true);
-	oled_gfx_draw_text(0, 40, "RAW UI", true);
-	oled_gfx_draw_text(0, 56, "V1", true);
-	oled_gfx_draw_text(0, 72, "64x128", true);
+	/* TOP LEFT: solid 5x5 square. */
+	for (int y = 4; y < 9; ++y) {
+		for (int x = 4; x < 9; ++x) {
+			oled_portrait_set_pixel(x, y);
+		}
+	}
+
+	/* TOP RIGHT: two horizontal bars. */
+	for (int x = 52; x < 60; ++x) {
+		oled_portrait_set_pixel(x, 4);
+		oled_portrait_set_pixel(x, 8);
+	}
+
+	/* BOTTOM LEFT: three horizontal bars. */
+	for (int x = 4; x < 14; ++x) {
+		oled_portrait_set_pixel(x, 116);
+		oled_portrait_set_pixel(x, 121);
+		oled_portrait_set_pixel(x, 126);
+	}
+
+	/* BOTTOM RIGHT: large L. */
+	for (int y = 112; y < 125; ++y) {
+		oled_portrait_set_pixel(54, y);
+	}
+	for (int x = 54; x < 62; ++x) {
+		oled_portrait_set_pixel(x, 124);
+	}
 }
 
 static void oled_ui_work_handler(struct k_work *work)
@@ -64,7 +82,8 @@ static void oled_ui_work_handler(struct k_work *work)
 	}
 
 	oled_gfx_init(oled_raw_framebuffer(), oled_raw_capabilities());
-	oled_ui_draw_static_screen();
+	oled_gfx_clear();
+	oled_ui_draw_geometry();
 	ret = oled_gfx_flush();
 	if (ret < 0) {
 		LOG_ERR("OLED UI V1 flush failed: %d", ret);

@@ -44,7 +44,7 @@ void oled_gfx_set_pixel(int x, int y, bool on)
 		return;
 	}
 
-	/* Opposite 90-degree rotation: portrait (x,y) -> physical (127-y,x). */
+	/* Calibration transform: physical_x = 127 - logical_y; physical_y = logical_x. */
 	physical_x = (int)OLED_RAW_WIDTH - 1 - y;
 	physical_y = x;
 	index = ((size_t)physical_y / 8U) * OLED_RAW_WIDTH +
