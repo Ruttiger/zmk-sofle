@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(oled_raw_portrait_cal, CONFIG_DISPLAY_LOG_LEVEL);
 #define PORTRAIT_HEIGHT 128U
 
 static const char oled_portrait_build_marker[] =
-	"RUTTIGER_RAW_PORTRAIT_VIEWPORT_V1";
+	"RUTTIGER_RAW_PORTRAIT_VIEWPORT_COM_SEQUENTIAL_V1";
 static const struct device *const oled_portrait_display =
 	DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 
