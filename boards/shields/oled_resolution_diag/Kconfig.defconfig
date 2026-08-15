@@ -4,6 +4,14 @@ config NICE_OLED_ON
     bool
     default n
 
+config NICE_OLED_CUSTOM_CANVAS_WIDTH
+    int "Compatibility canvas width (unused by the diagnostic)"
+    default 64
+
+config NICE_OLED_CUSTOM_CANVAS_HEIGHT
+    int "Compatibility canvas height (unused by the diagnostic)"
+    default 128
+
 config ZMK_DISPLAY
     default y
 
