@@ -101,31 +101,21 @@ static void raw_build_pattern(const struct display_capabilities *caps)
 	/* MONO10 logical background is black (1); white pattern pixels are 0. */
 	memset(raw_framebuffer, 0xff, sizeof(raw_framebuffer));
 
-	/* Complete one-pixel border. */
-	raw_hline(caps, 0, RAW_WIDTH - 1U, 0);
-	raw_hline(caps, 0, RAW_WIDTH - 1U, RAW_HEIGHT - 1U);
+	/* Four complete horizontal rows at each physical edge. */
+	for (uint16_t y = 0; y <= 3; ++y) {
+		raw_hline(caps, 0, RAW_WIDTH - 1U, y);
+	}
+	for (uint16_t y = RAW_HEIGHT - 4U; y < RAW_HEIGHT; ++y) {
+		raw_hline(caps, 0, RAW_WIDTH - 1U, y);
+	}
+
+	/* Outer vertical edges. */
 	raw_vline(caps, 0, 0, RAW_HEIGHT - 1U);
 	raw_vline(caps, RAW_WIDTH - 1U, 0, RAW_HEIGHT - 1U);
 
 	/* Physical midpoint lines. */
 	raw_vline(caps, RAW_WIDTH / 2U, 1, RAW_HEIGHT - 2U);
 	raw_hline(caps, 1, RAW_WIDTH - 2U, RAW_HEIGHT / 2U);
-
-	/* Top-left square. */
-	raw_rect(caps, 5, 5, 6, 6);
-
-	/* Top-right: two bars. */
-	raw_rect(caps, RAW_WIDTH - 19U, 5, 5, 5);
-	raw_rect(caps, RAW_WIDTH - 10U, 5, 5, 9);
-
-	/* Bottom-left: three bars. */
-	raw_rect(caps, 5, RAW_HEIGHT - 16U, 15, 2);
-	raw_rect(caps, 5, RAW_HEIGHT - 11U, 10, 2);
-	raw_rect(caps, 5, RAW_HEIGHT - 6U, 5, 2);
-
-	/* Bottom-right: one asymmetric L. */
-	raw_rect(caps, RAW_WIDTH - 20U, RAW_HEIGHT - 17U, 3, 13);
-	raw_rect(caps, RAW_WIDTH - 20U, RAW_HEIGHT - 7U, 14, 3);
 }
 
 static void raw_ssd1306_work_handler(struct k_work *work)
