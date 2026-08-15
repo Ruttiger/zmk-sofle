@@ -1,0 +1,4 @@
+/*
+ * Content-only selector. The oled_raw_ssd1306_128x32 shield owns the
+ * physically validated DeviceTree configuration and hardware backend.
+ */

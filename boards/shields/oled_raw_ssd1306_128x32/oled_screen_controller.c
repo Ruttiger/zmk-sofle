@@ -6,12 +6,16 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/atomic.h>
 
 #include "oled_gfx_portrait.h"
 #include "oled_raw_ssd1306_128x32.h"
 #include "oled_screen_content.h"
+#include "oled_screen_controller.h"
 
 LOG_MODULE_REGISTER(oled_screen_controller, CONFIG_DISPLAY_LOG_LEVEL);
+
+static atomic_t oled_screen_initial_complete;
 
 static void oled_screen_work_handler(struct k_work *work)
 {
@@ -21,7 +25,7 @@ static void oled_screen_work_handler(struct k_work *work)
 
 	ret = oled_raw_prepare();
 	if (ret < 0) {
-		return;
+		goto complete;
 	}
 
 	oled_gfx_init();
@@ -31,14 +35,33 @@ static void oled_screen_work_handler(struct k_work *work)
 	ret = oled_gfx_flush();
 	if (ret < 0) {
 		LOG_ERR("OLED content flush failed: %d", ret);
-		return;
+		goto complete;
 	}
 
 	LOG_INF("%s written once; framebuffer=%u bytes",
 		oled_screen_content_name(), OLED_RAW_BUFFER_SIZE);
+
+complete:
+	atomic_set(&oled_screen_initial_complete, 1);
 }
 
 static K_WORK_DELAYABLE_DEFINE(oled_screen_work, oled_screen_work_handler);
+
+void oled_screen_request_redraw(void)
+{
+	int ret;
+
+	/* Never replace the initial deferred draw with an early layer event. */
+	if (!atomic_get(&oled_screen_initial_complete)) {
+		return;
+	}
+
+	/* One delayable work item naturally coalesces pending layer changes. */
+	ret = k_work_reschedule(&oled_screen_work, K_NO_WAIT);
+	if (ret < 0) {
+		LOG_ERR("could not request OLED redraw: %d", ret);
+	}
+}
 
 static int oled_screen_schedule(void)
 {

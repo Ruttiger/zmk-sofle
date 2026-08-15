@@ -12,6 +12,13 @@ if(CONFIG_SHIELD_OLED_UI_32X128_V1)
         oled_gfx_text.c
         oled_ui_v1.c
     )
+elseif(CONFIG_SHIELD_OLED_UI_32X128_V2_LAYER)
+    zephyr_library_include_directories(${APPLICATION_SOURCE_DIR}/include)
+    zephyr_library_sources(
+        oled_font_5x7.c
+        oled_gfx_text.c
+        oled_ui_v2_layer.c
+    )
 else()
     zephyr_library_sources(oled_smoke_screen.c)
 endif()
