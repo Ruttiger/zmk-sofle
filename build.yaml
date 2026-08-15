@@ -1,31 +1,15 @@
 ---
 include:
-  # Native eyelash_sofle ARM boards with SSD1306 OLED (I2C).
-  # Display config is in the shield overlays (ssd1306fb, i2c0, disable spi0).
+  # Production 128x32 baseline physically validated on the LEFT only.
+  # Display config is in the shield overlay (ssd1306fb, i2c0, disable spi0).
   - board: eyelash_sofle_left
-    shield: eyelash_sofle_central_left oled_raw_ssd1306_128x64
+    shield: eyelash_sofle_central_left oled_raw_ssd1306_128x32
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y -DCONFIG_ZMK_USB=y
-    artifact-name: ruttiger_eyelash_sofle_raw_baseline_left
+    artifact-name: ruttiger_eyelash_sofle_oled_raw_128x32_left
 
-  - board: eyelash_sofle_left
-    shield: eyelash_sofle_central_left oled_raw_portrait_cal
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y -DCONFIG_ZMK_USB=y
-    artifact-name: ruttiger_eyelash_sofle_oled_portrait_32x128_viewport_v1_left
-
-  - board: eyelash_sofle_left
-    shield: eyelash_sofle_central_left oled_ui_v1
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y -DCONFIG_ZMK_USB=y
-    artifact-name: ruttiger_eyelash_sofle_oled_ui_v1_left
-
-  - board: eyelash_sofle_left
-    shield: eyelash_sofle_central_left nice_oled
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n
-    artifact-name: ruttiger_eyelash_sofle_standalone_left
-
+  # RIGHT remains physically unvalidated; retain its existing definition and
+  # artifact unchanged until a separate hardware test establishes its geometry.
   - board: eyelash_sofle_right
     shield: eyelash_sofle_peripheral_right nice_oled
     artifact-name: ruttiger_eyelash_sofle_standalone_right

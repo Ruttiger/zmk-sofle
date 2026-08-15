@@ -1,6 +1,0 @@
-file_format: "1"
-id: oled-raw-portrait-cal
-name: Raw SSD1306 portrait calibration
-type: shield
-features:
-  - display
