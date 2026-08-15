@@ -1,0 +1,11 @@
+zephyr_library()
+zephyr_library_include_directories(
+    .
+    ${CMAKE_CURRENT_SOURCE_DIR}/../oled_ui_v1
+)
+zephyr_library_sources(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../oled_ui_v1/oled_raw_ssd1306_128x64.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../oled_ui_v1/oled_gfx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../oled_ui_v1/oled_font_5x7.c
+    oled_ui_v2_layer.c
+)

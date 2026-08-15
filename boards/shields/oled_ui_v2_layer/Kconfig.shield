@@ -1,0 +1,10 @@
+config SHIELD_OLED_UI_V2_LAYER
+    def_bool $(shields_list_contains,oled_ui_v2_layer)
+
+if SHIELD_OLED_UI_V2_LAYER
+
+config NICE_OLED_ON
+    bool
+    default n
+
+endif # SHIELD_OLED_UI_V2_LAYER

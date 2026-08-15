@@ -15,6 +15,12 @@ include:
     artifact-name: ruttiger_eyelash_sofle_oled_ui_v1_left
 
   - board: eyelash_sofle_left
+    shield: eyelash_sofle_central_left oled_ui_v2_layer
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y -DCONFIG_ZMK_USB=y
+    artifact-name: ruttiger_eyelash_sofle_oled_ui_v2_layer_left
+
+  - board: eyelash_sofle_left
     shield: eyelash_sofle_central_left nice_oled
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n
