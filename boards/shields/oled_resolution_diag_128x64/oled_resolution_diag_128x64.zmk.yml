@@ -1,0 +1,6 @@
+file_format: "1"
+id: oled-resolution-diag-128x64
+name: OLED Resolution Diagnostic 128x64
+type: shield
+features:
+  - display

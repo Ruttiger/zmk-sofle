@@ -1,0 +1,6 @@
+file_format: "1"
+id: oled-resolution-diag
+name: OLED Physical Resolution Diagnostic
+type: shield
+features:
+  - display

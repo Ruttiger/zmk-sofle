@@ -1,0 +1,5 @@
+&oled {
+    width = <128>;
+    height = <32>;
+    multiplex-ratio = <31>;
+};

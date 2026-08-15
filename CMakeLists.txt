@@ -1,4 +1,4 @@
-if(CONFIG_NICE_OLED_ON)
+if(CONFIG_NICE_OLED_ON AND NOT CONFIG_SHIELD_OLED_RESOLUTION_DIAG)
   zephyr_library()
   zephyr_library_sources(zmk-nice-oled-128x64.c)
 

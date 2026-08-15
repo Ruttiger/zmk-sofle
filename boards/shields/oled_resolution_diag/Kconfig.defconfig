@@ -1,0 +1,16 @@
+if SHIELD_OLED_RESOLUTION_DIAG
+
+config NICE_OLED_ON
+    bool
+    default n
+
+config ZMK_DISPLAY
+    default y
+
+config I2C
+    default y
+
+config SSD1306
+    default y
+
+endif # SHIELD_OLED_RESOLUTION_DIAG

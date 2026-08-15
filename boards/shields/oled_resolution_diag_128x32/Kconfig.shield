@@ -1,0 +1,2 @@
+config SHIELD_OLED_RESOLUTION_DIAG_128X32
+    def_bool $(shields_list_contains,oled_resolution_diag_128x32)
