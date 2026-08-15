@@ -140,17 +140,41 @@ static void oled_portrait_build_calibration(
 	memset(oled_portrait_framebuffer, 0xff,
 	       sizeof(oled_portrait_framebuffer));
 
-	/* Left edge ladder: x=0..3, with distinct stepped lengths. */
-	portrait_vline(caps, 0, 10, 117);
-	portrait_vline(caps, 1, 14, 113);
-	portrait_vline(caps, 2, 18, 109);
-	portrait_vline(caps, 3, 22, 105);
+	/* Left extreme columns, all spanning portrait y=15..112. */
+	portrait_vline(caps, 0, 15, 112);
+	portrait_vline(caps, 2, 15, 112);
+	portrait_vline(caps, 4, 15, 112);
+	portrait_vline(caps, 6, 15, 112);
 
-	/* Right edge ladder: x=60..63, mirrored stepped lengths. */
-	portrait_vline(caps, 60, 22, 105);
-	portrait_vline(caps, 61, 18, 109);
-	portrait_vline(caps, 62, 14, 113);
-	portrait_vline(caps, 63, 10, 117);
+	/* Left markers: 1, 2, 3, and 4 horizontal marks. */
+	portrait_hline(caps, 0, 1, 2);
+	portrait_hline(caps, 2, 3, 4);
+	portrait_hline(caps, 2, 3, 6);
+	portrait_hline(caps, 4, 5, 9);
+	portrait_hline(caps, 4, 5, 11);
+	portrait_hline(caps, 4, 5, 13);
+	portrait_hline(caps, 6, 7, 1);
+	portrait_hline(caps, 6, 7, 3);
+	portrait_hline(caps, 6, 7, 5);
+	portrait_hline(caps, 6, 7, 7);
+
+	/* Right extreme columns, all spanning portrait y=15..112. */
+	portrait_vline(caps, 57, 15, 112);
+	portrait_vline(caps, 59, 15, 112);
+	portrait_vline(caps, 61, 15, 112);
+	portrait_vline(caps, 63, 15, 112);
+
+	/* Right markers: 1, 2, 3, and 4 horizontal marks. */
+	portrait_hline(caps, 56, 57, 2);
+	portrait_hline(caps, 58, 59, 4);
+	portrait_hline(caps, 58, 59, 6);
+	portrait_hline(caps, 60, 61, 9);
+	portrait_hline(caps, 60, 61, 11);
+	portrait_hline(caps, 60, 61, 13);
+	portrait_hline(caps, 62, 63, 1);
+	portrait_hline(caps, 62, 63, 3);
+	portrait_hline(caps, 62, 63, 5);
+	portrait_hline(caps, 62, 63, 7);
 
 	/* Short horizontal line exactly at portrait y=64. */
 	portrait_hline(caps, 22, 42, 64);
