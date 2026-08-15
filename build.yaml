@@ -12,7 +12,7 @@ include:
     shield: eyelash_sofle_central_left oled_raw_portrait_cal
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y -DCONFIG_ZMK_USB=y
-    artifact-name: ruttiger_eyelash_sofle_oled_portrait_cal_left
+    artifact-name: ruttiger_eyelash_sofle_oled_portrait_orientation_v2_left
 
   - board: eyelash_sofle_left
     shield: eyelash_sofle_central_left oled_ui_v1

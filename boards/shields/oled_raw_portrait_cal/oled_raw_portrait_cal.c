@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(oled_raw_portrait_cal, CONFIG_DISPLAY_LOG_LEVEL);
 #define PORTRAIT_HEIGHT 128U
 
 static const char oled_portrait_build_marker[] =
-	"RUTTIGER_RAW_PORTRAIT_CAL_V1";
+	"RUTTIGER_RAW_PORTRAIT_ORIENTATION_V2";
 static const struct device *const oled_portrait_display =
 	DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 
@@ -140,49 +140,28 @@ static void oled_portrait_build_calibration(
 	memset(oled_portrait_framebuffer, 0xff,
 	       sizeof(oled_portrait_framebuffer));
 
-	/* Left extreme columns, all spanning portrait y=15..112. */
-	portrait_vline(caps, 0, 15, 112);
-	portrait_vline(caps, 2, 15, 112);
-	portrait_vline(caps, 4, 15, 112);
-	portrait_vline(caps, 6, 15, 112);
+	/* Logical TL: one small square. */
+	portrait_rect(caps, 8, 10, 4, 4);
 
-	/* Left markers: 1, 2, 3, and 4 horizontal marks. */
-	portrait_hline(caps, 0, 1, 2);
-	portrait_hline(caps, 2, 3, 4);
-	portrait_hline(caps, 2, 3, 6);
-	portrait_hline(caps, 4, 5, 9);
-	portrait_hline(caps, 4, 5, 11);
-	portrait_hline(caps, 4, 5, 13);
-	portrait_hline(caps, 6, 7, 1);
-	portrait_hline(caps, 6, 7, 3);
-	portrait_hline(caps, 6, 7, 5);
-	portrait_hline(caps, 6, 7, 7);
+	/* Logical TR: two small squares. */
+	portrait_rect(caps, 45, 10, 4, 4);
+	portrait_rect(caps, 52, 10, 4, 4);
 
-	/* Right extreme columns, all spanning portrait y=15..112. */
-	portrait_vline(caps, 57, 15, 112);
-	portrait_vline(caps, 59, 15, 112);
-	portrait_vline(caps, 61, 15, 112);
-	portrait_vline(caps, 63, 15, 112);
+	/* Logical BL: three small squares. */
+	portrait_rect(caps, 5, 110, 4, 4);
+	portrait_rect(caps, 12, 110, 4, 4);
+	portrait_rect(caps, 19, 110, 4, 4);
 
-	/* Right markers: 1, 2, 3, and 4 horizontal marks. */
-	portrait_hline(caps, 56, 57, 2);
-	portrait_hline(caps, 58, 59, 4);
-	portrait_hline(caps, 58, 59, 6);
-	portrait_hline(caps, 60, 61, 9);
-	portrait_hline(caps, 60, 61, 11);
-	portrait_hline(caps, 60, 61, 13);
-	portrait_hline(caps, 62, 63, 1);
-	portrait_hline(caps, 62, 63, 3);
-	portrait_hline(caps, 62, 63, 5);
-	portrait_hline(caps, 62, 63, 7);
+	/* Logical BR: four small squares in a 2x2 group. */
+	portrait_rect(caps, 45, 107, 4, 4);
+	portrait_rect(caps, 52, 107, 4, 4);
+	portrait_rect(caps, 45, 114, 4, 4);
+	portrait_rect(caps, 52, 114, 4, 4);
 
-	/* Short horizontal line exactly at portrait y=64. */
-	portrait_hline(caps, 22, 42, 64);
-
-	/* Upper-center arrow pointing toward portrait y=0. */
-	portrait_vline(caps, 32, 21, 50);
-	portrait_diag(caps, 24, 28, 32, 20);
-	portrait_diag(caps, 40, 28, 32, 20);
+	/* Simple arrow pointing toward logical TOP (decreasing y). */
+	portrait_vline(caps, 32, 40, 66);
+	portrait_diag(caps, 25, 47, 32, 40);
+	portrait_diag(caps, 39, 47, 32, 40);
 }
 
 static int oled_portrait_flush(const struct device *display)
@@ -244,7 +223,7 @@ static void oled_portrait_work_handler(struct k_work *work)
 		return;
 	}
 
-	LOG_INF("RAW portrait geometry calibration written once");
+	LOG_INF("RAW portrait orientation V2 written once");
 }
 
 static K_WORK_DELAYABLE_DEFINE(oled_portrait_work,
