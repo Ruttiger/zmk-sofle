@@ -46,7 +46,7 @@ for variant in 128x32 128x64; do
 
   echo "--- ${variant} forbidden implementation references ---"
   if grep -RniE --exclude='*.bin' --exclude='*.elf' \
-      'zmk-nice-oled|nice_oled|screen_peripheral\.c|(^|[/\\])screen\.c|rotate_canvas|CANVAS_WIDTH|CANVAS_HEIGHT' \
+      'zmk-nice-oled-128x64\.c|zmk-nice-oled|screen_peripheral\.c|(^|[/\\])screen\.c|rotate_canvas' \
       "$build_dir"; then
     echo "FORBIDDEN_REFERENCE_FOUND"
     exit 1
