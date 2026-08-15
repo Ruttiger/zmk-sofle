@@ -13,17 +13,13 @@
 #include "oled_gfx_portrait.h"
 #include "oled_raw_ssd1306_128x32.h"
 
-#define PHYSICAL_WIDTH 128U
-#define PHYSICAL_HEIGHT 32U
-#define BUFFER_SIZE 512U
-
 static uint8_t *oled_gfx_framebuffer;
 static const struct display_capabilities *oled_gfx_caps;
 
 void oled_gfx_init(void)
 {
-	oled_gfx_framebuffer = oled_raw_ssd1306_128x32_framebuffer();
-	oled_gfx_caps = oled_raw_ssd1306_128x32_capabilities();
+	oled_gfx_framebuffer = oled_raw_framebuffer();
+	oled_gfx_caps = oled_raw_capabilities();
 }
 
 void oled_gfx_set_pixel(int x, int y, bool on)
@@ -43,7 +39,7 @@ void oled_gfx_set_pixel(int x, int y, bool on)
 	physical_x = 127 - y;
 	physical_y = x;
 
-	index = ((size_t)physical_y / 8U) * PHYSICAL_WIDTH +
+	index = ((size_t)physical_y / 8U) * OLED_RAW_WIDTH +
 		(size_t)physical_x;
 	bit = (oled_gfx_caps->screen_info & SCREEN_INFO_MONO_MSB_FIRST) ?
 		(7U - (physical_y & 7U)) : (physical_y & 7U);
@@ -108,11 +104,11 @@ void oled_gfx_fill_rect(int x, int y, int width, int height, bool on)
 void oled_gfx_clear(void)
 {
 	if (oled_gfx_framebuffer != NULL) {
-		memset(oled_gfx_framebuffer, 0xff, BUFFER_SIZE);
+		memset(oled_gfx_framebuffer, 0xff, OLED_RAW_BUFFER_SIZE);
 	}
 }
 
 int oled_gfx_flush(void)
 {
-	return oled_raw_ssd1306_128x32_flush();
+	return oled_raw_flush();
 }

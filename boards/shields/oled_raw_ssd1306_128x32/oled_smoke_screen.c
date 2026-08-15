@@ -5,12 +5,11 @@
  */
 
 #include "oled_gfx_portrait.h"
+#include "oled_screen_content.h"
 #include "oled_smoke_screen.h"
 
 void oled_smoke_screen_draw(void)
 {
-	oled_gfx_clear();
-
 	/* Top-left: L marker, touching x=0 and y=0. */
 	oled_gfx_hline(0, 5, 0, true);
 	oled_gfx_vline(0, 0, 5, true);
@@ -28,4 +27,14 @@ void oled_smoke_screen_draw(void)
 
 	/* Short line at the logical center of the portrait viewport. */
 	oled_gfx_hline(11, 20, 64, true);
+}
+
+void oled_screen_content_draw(void)
+{
+	oled_smoke_screen_draw();
+}
+
+const char *oled_screen_content_name(void)
+{
+	return "production baseline smoke screen";
 }
