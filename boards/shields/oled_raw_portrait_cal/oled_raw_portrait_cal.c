@@ -11,6 +11,7 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/display.h>
+#include <zephyr/drivers/i2c.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
@@ -26,9 +27,11 @@ LOG_MODULE_REGISTER(oled_raw_portrait_cal, CONFIG_DISPLAY_LOG_LEVEL);
 #define PORTRAIT_HEIGHT 128U
 
 static const char oled_portrait_build_marker[] =
-	"RUTTIGER_RAW_PORTRAIT_VIEWPORT_COM_SEQUENTIAL_V1";
+	"RUTTIGER_RAW_PORTRAIT_VIEWPORT_COM_LRREMAP_V1";
 static const struct device *const oled_portrait_display =
 	DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+static const struct i2c_dt_spec oled_portrait_i2c =
+	I2C_DT_SPEC_GET(DT_CHOSEN(zephyr_display));
 
 static uint8_t oled_portrait_framebuffer[PHYSICAL_BUFFER_SIZE];
 static uint8_t oled_portrait_clear_buffer[PHYSICAL_BUFFER_SIZE];
@@ -39,6 +42,15 @@ static const struct display_buffer_descriptor oled_portrait_buffer_descriptor = 
 	.height = PHYSICAL_HEIGHT,
 	.pitch = PHYSICAL_WIDTH,
 };
+
+static int oled_portrait_set_com_lr_remap(void)
+{
+	/* SSD1306 DAh: alternative COM pins plus COM left/right remap. */
+	const uint8_t commands[] = {0xda, 0x32};
+
+	return i2c_burst_write_dt(&oled_portrait_i2c, 0x00, commands,
+				  sizeof(commands));
+}
 
 /* Zephyr v0.3 has no public display_clear() operation. */
 static int oled_portrait_clear(const struct device *display)
@@ -186,6 +198,13 @@ static void oled_portrait_work_handler(struct k_work *work)
 		return;
 	}
 
+	ret = oled_portrait_set_com_lr_remap();
+	if (ret < 0) {
+		LOG_ERR("SSD1306 COM left/right remap failed: %d", ret);
+		return;
+	}
+	LOG_INF("SSD1306 COM alternative + left/right remap (DA 32) applied");
+
 	ret = oled_portrait_clear(oled_portrait_display);
 	if (ret < 0) {
 		LOG_ERR("oled_portrait_clear failed: %d", ret);
@@ -199,7 +218,7 @@ static void oled_portrait_work_handler(struct k_work *work)
 		return;
 	}
 
-	LOG_INF("RAW portrait viewport V1 written once");
+	LOG_INF("RAW portrait viewport COM LR-remap V1 written once");
 }
 
 static K_WORK_DELAYABLE_DEFINE(oled_portrait_work,
