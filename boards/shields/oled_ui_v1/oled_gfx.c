@@ -14,6 +14,11 @@
 #include "oled_gfx.h"
 #include "oled_raw_ssd1306_128x64.h"
 
+#define PORTRAIT_WIDTH 64
+#define PORTRAIT_HEIGHT 128
+#define PHYSICAL_WIDTH 128
+#define PHYSICAL_HEIGHT 64
+
 static uint8_t *oled_gfx_framebuffer;
 static const struct display_capabilities *oled_gfx_caps;
 
@@ -40,13 +45,18 @@ void oled_gfx_set_pixel(int x, int y, bool on)
 	uint8_t bit;
 
 	if (oled_gfx_framebuffer == NULL || oled_gfx_caps == NULL ||
-	    x < 0 || x >= OLED_GFX_WIDTH || y < 0 || y >= OLED_GFX_HEIGHT) {
+	    x < 0 || x >= PORTRAIT_WIDTH || y < 0 || y >= PORTRAIT_HEIGHT) {
 		return;
 	}
 
-	/* Calibration transform: physical_x = 127 - logical_y; physical_y = logical_x. */
-	physical_x = (int)OLED_RAW_WIDTH - 1 - y;
-	physical_y = x;
+	/* Calibration transform: physical_x = logical_y; physical_y = 63 - logical_x. */
+	physical_x = y;
+	physical_y = (int)(PHYSICAL_HEIGHT - 1U) - x;
+	if (physical_x < 0 || physical_x >= (int)PHYSICAL_WIDTH ||
+	    physical_y < 0 || physical_y >= (int)PHYSICAL_HEIGHT) {
+		return;
+	}
+
 	index = ((size_t)physical_y / 8U) * OLED_RAW_WIDTH +
 		(size_t)physical_x;
 	bit = (oled_gfx_caps->screen_info & SCREEN_INFO_MONO_MSB_FIRST) ?
