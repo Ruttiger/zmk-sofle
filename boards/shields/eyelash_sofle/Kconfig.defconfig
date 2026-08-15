@@ -6,8 +6,18 @@ config ZMK_KEYBOARD_NAME
 config USB_DEVICE_MANUFACTURER
     default "Eyelash Sofle"
 
+endif
+
+
+if SHIELD_EYELASH_SOFLE_CENTRAL_DONGLE || SHIELD_EYELASH_SOFLE_PERIPHERAL_LEFT || SHIELD_EYELASH_SOFLE_PERIPHERAL_RIGHT || SHIELD_EYELASH_SOFLE_CENTRAL_LEFT
+
 config ZMK_SPLIT_ROLE_CENTRAL
-    default n
+    # The shield name is the source of truth for the split role. A central
+    # left half must select the central nice!oled screen implementation.
+    default y if SHIELD_EYELASH_SOFLE_CENTRAL_LEFT
+    default n if SHIELD_EYELASH_SOFLE_CENTRAL_DONGLE
+    default n if SHIELD_EYELASH_SOFLE_PERIPHERAL_LEFT
+    default n if SHIELD_EYELASH_SOFLE_PERIPHERAL_RIGHT
 
 endif
 

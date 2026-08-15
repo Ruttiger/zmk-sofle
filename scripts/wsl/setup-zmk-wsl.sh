@@ -116,12 +116,14 @@ python -c "import pkg_resources" >/dev/null
 # declared upstream module available as an explicit extra module for local
 # builds as well.
 nice_oled_root="$HOME/zmk-nice-oled-upstream"
+nice_oled_repo="https://github.com/mctechnology17/zmk-nice-oled.git"
+nice_oled_revision="main"
 if [[ ! -d "$nice_oled_root/.git" ]]; then
-  git clone --branch main https://github.com/mctechnology17/zmk-nice-oled.git "$nice_oled_root"
+  git clone --branch "$nice_oled_revision" "$nice_oled_repo" "$nice_oled_root"
 else
-  git -C "$nice_oled_root" fetch origin main
-  git -C "$nice_oled_root" checkout main
-  git -C "$nice_oled_root" pull --ff-only origin main
+  git -C "$nice_oled_root" fetch origin "$nice_oled_revision"
+  git -C "$nice_oled_root" checkout "$nice_oled_revision"
+  git -C "$nice_oled_root" pull --ff-only origin "$nice_oled_revision"
 fi
 
 echo ""
