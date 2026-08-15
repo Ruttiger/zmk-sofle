@@ -1,0 +1,9 @@
+&oled {
+    width = <128>;
+    height = <64>;
+    multiplex-ratio = <63>;
+    segment-remap;
+    com-invdir;
+    inversion-on;
+    prechargep = <0x22>;
+};
