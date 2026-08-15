@@ -28,6 +28,14 @@ fi
 
 for variant in 128x32 128x64; do
   build_dir="$zmk_root/build/ruttiger_eyelash_sofle_oled_res_${variant}_left"
+  echo "--- ${variant} CONFIG_NICE_OLED_ON ---"
+  if grep -nE '^# CONFIG_NICE_OLED_ON is not set$|^CONFIG_NICE_OLED_ON=n$' \
+      "$build_dir/zephyr/.config"; then
+    :
+  else
+    echo "UNSET (no CONFIG_NICE_OLED_ON entry)"
+  fi
+
   echo "--- ${variant} zephyr.dts SSD1306 ---"
   awk '/oled: ssd1306@3c {/,/inversion-on;/' "$build_dir/zephyr/zephyr.dts" |
     sed -e 's/< 0x80 >/<128>/g' \
@@ -41,6 +49,15 @@ for variant in 128x32 128x64; do
       'zmk-nice-oled|nice_oled|screen_peripheral\.c|(^|[/\\])screen\.c|rotate_canvas|CANVAS_WIDTH|CANVAS_HEIGHT' \
       "$build_dir"; then
     echo "FORBIDDEN_REFERENCE_FOUND"
+    exit 1
+  else
+    echo "NONE"
+  fi
+
+  echo "--- ${variant} final link flags ---"
+  if grep -Rni --include='*.ninja' --include='*.map' --include='*.cmd' \
+      'rotate_canvas|--wrap' "$build_dir"; then
+    echo "FORBIDDEN_LINK_REFERENCE_FOUND"
     exit 1
   else
     echo "NONE"
