@@ -44,9 +44,9 @@ void oled_gfx_set_pixel(int x, int y, bool on)
 		return;
 	}
 
-	/* One 90-degree rotation: portrait (x,y) -> physical (y,63-x). */
-	physical_x = y;
-	physical_y = (int)OLED_RAW_HEIGHT - 1 - x;
+	/* Opposite 90-degree rotation: portrait (x,y) -> physical (127-y,x). */
+	physical_x = (int)OLED_RAW_WIDTH - 1 - y;
+	physical_y = x;
 	index = ((size_t)physical_y / 8U) * OLED_RAW_WIDTH +
 		(size_t)physical_x;
 	bit = (oled_gfx_caps->screen_info & SCREEN_INFO_MONO_MSB_FIRST) ?
