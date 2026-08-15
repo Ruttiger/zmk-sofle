@@ -18,6 +18,8 @@ void oled_gfx_hline(int x0, int x1, int y, bool on);
 void oled_gfx_vline(int x, int y0, int y1, bool on);
 void oled_gfx_rect(int x, int y, int width, int height, bool on);
 void oled_gfx_fill_rect(int x, int y, int width, int height, bool on);
+void oled_gfx_draw_char(int x, int y, char ch, bool on);
+void oled_gfx_draw_text(int x, int y, const char *text, bool on);
 void oled_gfx_clear(void);
 int oled_gfx_flush(void);
 

@@ -11,9 +11,13 @@
 
 #include <zephyr/drivers/display.h>
 
-uint8_t *oled_raw_ssd1306_128x32_framebuffer(void);
-const struct display_capabilities *
-oled_raw_ssd1306_128x32_capabilities(void);
-int oled_raw_ssd1306_128x32_flush(void);
+#define OLED_RAW_WIDTH 128U
+#define OLED_RAW_HEIGHT 32U
+#define OLED_RAW_BUFFER_SIZE 512U
+
+int oled_raw_prepare(void);
+uint8_t *oled_raw_framebuffer(void);
+const struct display_capabilities *oled_raw_capabilities(void);
+int oled_raw_flush(void);
 
 #endif /* OLED_RAW_SSD1306_128X32_H_ */

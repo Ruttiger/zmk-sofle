@@ -8,6 +8,13 @@ include:
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y -DCONFIG_ZMK_USB=y
     artifact-name: ruttiger_eyelash_sofle_oled_raw_128x32_left
 
+  # Static text UI over the same validated RAW backend and framebuffer.
+  - board: eyelash_sofle_left
+    shield: eyelash_sofle_central_left oled_raw_ssd1306_128x32 oled_ui_32x128_v1
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=y -DCONFIG_ZMK_USB=y
+    artifact-name: ruttiger_eyelash_sofle_oled_ui_32x128_v1_left
+
   # RIGHT remains physically unvalidated; retain its existing definition and
   # artifact unchanged until a separate hardware test establishes its geometry.
   - board: eyelash_sofle_right

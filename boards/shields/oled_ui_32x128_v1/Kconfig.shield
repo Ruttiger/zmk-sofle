@@ -1,0 +1,2 @@
+config SHIELD_OLED_UI_32X128_V1
+    def_bool $(shields_list_contains,oled_ui_32x128_v1)
