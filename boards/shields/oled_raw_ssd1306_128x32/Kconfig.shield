@@ -4,7 +4,7 @@ config SHIELD_OLED_RAW_SSD1306_128X32
 if SHIELD_OLED_RAW_SSD1306_128X32
 
 config NICE_OLED_ON
-    bool
+    bool "Enable nice OLED"
     default n
 
 endif # SHIELD_OLED_RAW_SSD1306_128X32
