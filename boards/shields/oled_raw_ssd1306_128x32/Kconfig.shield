@@ -1,0 +1,10 @@
+config SHIELD_OLED_RAW_SSD1306_128X32
+    def_bool $(shields_list_contains,oled_raw_ssd1306_128x32)
+
+if SHIELD_OLED_RAW_SSD1306_128X32
+
+config NICE_OLED_ON
+    bool
+    default n
+
+endif # SHIELD_OLED_RAW_SSD1306_128X32

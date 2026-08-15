@@ -1,0 +1,9 @@
+/*
+ * The production SSD1306 geometry is defined by
+ * eyelash_sofle_central_left.overlay. Physical validation currently applies
+ * only to the LEFT module; this shield deliberately does not override it.
+ */
+
+&oled {
+    status = "okay";
+};
