@@ -1,0 +1,6 @@
+file_format: "1"
+id: oled-raw-ssd1306-128x64-edges-debug
+name: Raw SSD1306 128x64 edge debug diagnostic
+type: shield
+features:
+  - display
