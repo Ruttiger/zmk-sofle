@@ -1,0 +1,10 @@
+config SHIELD_OLED_RAW_PORTRAIT_CAL
+    def_bool $(shields_list_contains,oled_raw_portrait_cal)
+
+if SHIELD_OLED_RAW_PORTRAIT_CAL
+
+config NICE_OLED_ON
+    bool
+    default n
+
+endif # SHIELD_OLED_RAW_PORTRAIT_CAL
