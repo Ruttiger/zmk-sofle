@@ -1,0 +1,6 @@
+file_format: "1"
+id: oled-raw-ssd1306-128x32
+name: Raw SSD1306 128x32 diagnostic
+type: shield
+features:
+  - display
