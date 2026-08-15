@@ -1,0 +1,6 @@
+file_format: "1"
+id: oled-ui-32x128-v1
+name: Static OLED UI 32x128 V1
+type: shield
+features:
+  - display
