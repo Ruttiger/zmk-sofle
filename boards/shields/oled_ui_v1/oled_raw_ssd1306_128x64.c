@@ -2,8 +2,9 @@
  * Low-level RAW SSD1306 128x64 backend.
  *
  * This intentionally keeps the validated display contract: one physical
- * 1024-byte framebuffer, MONO10, vertical tiling, MSB-first, and the normal
- * Zephyr display_write()/display_blanking_off() path.
+ * 1024-byte framebuffer, MONO10, vertical tiling, and the normal Zephyr
+ * display_write()/display_blanking_off() path. Pixel bit order follows the
+ * SCREEN_INFO_MONO_MSB_FIRST flag reported by the display.
  *
  * SPDX-License-Identifier: MIT
  */
@@ -63,8 +64,7 @@ int oled_raw_prepare(void)
 	    oled_raw_caps.y_resolution != OLED_RAW_HEIGHT ||
 	    !(oled_raw_caps.supported_pixel_formats & PIXEL_FORMAT_MONO10) ||
 	    oled_raw_caps.current_pixel_format != PIXEL_FORMAT_MONO10 ||
-	    !(oled_raw_caps.screen_info & SCREEN_INFO_MONO_VTILED) ||
-	    !(oled_raw_caps.screen_info & SCREEN_INFO_MONO_MSB_FIRST)) {
+	    !(oled_raw_caps.screen_info & SCREEN_INFO_MONO_VTILED)) {
 		LOG_ERR("unsupported SSD1306 capabilities; UI V1 aborted");
 		return -ENOTSUP;
 	}
