@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(oled_raw_portrait_cal, CONFIG_DISPLAY_LOG_LEVEL);
 #define PORTRAIT_HEIGHT 128U
 
 static const char oled_portrait_build_marker[] =
-	"RUTTIGER_RAW_PORTRAIT_32X128_ORIENTATION_V1";
+	"RUTTIGER_RAW_PORTRAIT_32X128_VIEWPORT_V1";
 static const struct device *const oled_portrait_display =
 	DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 
@@ -113,55 +113,27 @@ static void portrait_vline(const struct display_capabilities *caps,
 	}
 }
 
-static void portrait_rect(const struct display_capabilities *caps,
-			  int x, int y, int width, int height)
-{
-	portrait_hline(caps, x, x + width - 1, y);
-	portrait_hline(caps, x, x + width - 1, y + height - 1);
-	portrait_vline(caps, x, y, y + height - 1);
-	portrait_vline(caps, x + width - 1, y, y + height - 1);
-}
-
-static void portrait_diag(const struct display_capabilities *caps,
-			  int x0, int y0, int x1, int y1)
-{
-	int dx = (x1 >= x0) ? 1 : -1;
-	int dy = (y1 >= y0) ? 1 : -1;
-	int length = (x1 >= x0) ? x1 - x0 : x0 - x1;
-
-	for (int i = 0; i <= length; ++i) {
-		portrait_set_pixel(caps, x0 + i * dx, y0 + i * dy, true);
-	}
-}
-
 static void oled_portrait_build_calibration(
 	const struct display_capabilities *caps)
 {
 	memset(oled_portrait_framebuffer, 0xff,
 	       sizeof(oled_portrait_framebuffer));
 
-	/* Logical TL: one small square. */
-	portrait_rect(caps, 5, 10, 3, 3);
+	/* TOP: cap is exactly y=0; stem points inward. */
+	portrait_hline(caps, 3, 9, 0);
+	portrait_vline(caps, 6, 0, 5);
 
-	/* Logical TR: two small squares. */
-	portrait_rect(caps, 20, 10, 3, 3);
-	portrait_rect(caps, 26, 10, 3, 3);
+	/* BOTTOM: cap is exactly y=127; stem points inward. */
+	portrait_hline(caps, 21, 29, 127);
+	portrait_vline(caps, 25, 122, 127);
 
-	/* Logical BL: three small squares. */
-	portrait_rect(caps, 3, 110, 3, 3);
-	portrait_rect(caps, 9, 110, 3, 3);
-	portrait_rect(caps, 15, 110, 3, 3);
+	/* LEFT: cap is exactly x=0; stem points inward. */
+	portrait_vline(caps, 0, 32, 40);
+	portrait_hline(caps, 0, 5, 36);
 
-	/* Logical BR: four small squares in a 2x2 group. */
-	portrait_rect(caps, 20, 107, 3, 3);
-	portrait_rect(caps, 26, 107, 3, 3);
-	portrait_rect(caps, 20, 113, 3, 3);
-	portrait_rect(caps, 26, 113, 3, 3);
-
-	/* Simple arrow pointing toward logical TOP (decreasing y). */
-	portrait_vline(caps, 16, 40, 66);
-	portrait_diag(caps, 10, 46, 16, 40);
-	portrait_diag(caps, 22, 46, 16, 40);
+	/* RIGHT: cap is exactly x=31; stem points inward. */
+	portrait_vline(caps, 31, 84, 94);
+	portrait_hline(caps, 26, 31, 89);
 }
 
 static int oled_portrait_flush(const struct device *display)
@@ -223,7 +195,7 @@ static void oled_portrait_work_handler(struct k_work *work)
 		return;
 	}
 
-	LOG_INF("RAW portrait 32x128 orientation V1 written once");
+	LOG_INF("RAW portrait 32x128 viewport V1 written once");
 }
 
 static K_WORK_DELAYABLE_DEFINE(oled_portrait_work,
