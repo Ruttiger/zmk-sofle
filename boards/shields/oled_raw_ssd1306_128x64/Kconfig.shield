@@ -1,0 +1,2 @@
+config SHIELD_OLED_RAW_SSD1306_128X64
+    def_bool $(shields_list_contains,oled_raw_ssd1306_128x64)
