@@ -121,7 +121,7 @@ void oled_gfx_draw_char(int x, int y, char ch, bool on)
 
 	for (int row = 0; row < OLED_FONT_5X7_HEIGHT; ++row) {
 		for (int col = 0; col < OLED_FONT_5X7_WIDTH; ++col) {
-			if (glyph[row] & BIT(col)) {
+			if (glyph[row] & BIT(OLED_FONT_5X7_WIDTH - 1 - col)) {
 				oled_gfx_set_pixel(x + col, y + row, on);
 			}
 		}
